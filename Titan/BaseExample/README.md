@@ -39,7 +39,7 @@ ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 ```
-The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it will be maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatable with `CUDA/7.5` and sets up appropriate environment variables.
+The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatable with `CUDA/7.5` and sets up appropriate environment variables.
 
 ```
 # Persist PATH and LD_LIBRARY_PATH to container runtime
@@ -47,7 +47,7 @@ echo "" >> /environment
 echo "export PATH=${PATH}" >> /environment
 echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
 ```
-`Singularity` sources the file `/environment` during container runtime, here we ensure that any environment variables required at runtime are persisted.
+`Singularity` sources the `/environment` file during container runtime, here we ensure that any environment variables required at runtime are persisted.
 
 ```
 # Patch container to work on Titan
@@ -55,24 +55,25 @@ wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanP
 sh TitanPrep.sh
 rm TitanPrep.sh
 ```
-Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Ubuntu` provided `MPICH` installation. At this point the container will not function properly on any system but Titan.
+Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Ubuntu` provided `MPICH` installation.
 
 ## Building the container
 ```
 $ sudo singularity create --size 8000 ZestyTitan.img
 $ sudo singularity bootstrap ZestyTitan.img Titan.def
 ```
-Building the container is straight forward, the only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
+Building the container does not provide any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
 
 ## Transfering the container
 Once the container has been built on a local resource it can be transfered to the OLCF. Currently Globus Online is the recomended way to facilitate this transfer.
 
 ## Running the container
 ```
+$ module load singularity
 $ singularity exec ZestyTitan.img mpicc HelloMPI.c -o mpi.out
 $ singularity exec ZestyTitan.img nvcc HelloCuda.cu -o cuda.out
 ```
-From within an interactive or batch job applications can be built utilizing the containers software stack. 
+Within an interactive or batch job applications can be built and run utilizing the containers software stack. Full `/lustre` access is available from inside the container and the directory in which singularity is launched from will be the current working directory inside of the container. In this case the source code `HelloMPI.c` and `HelloCuda.cu` exists outside of the container on `lustre` and the applications `mpi.out` and `cuda.out` will be created in the same `lustre` directory.
 
 ```
 $ aprun -n 2 -N 1 singularity exec ZestyTitan.img ./mpi.out 
