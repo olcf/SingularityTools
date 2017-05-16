@@ -27,6 +27,10 @@ rm cuda_7.5.18_linux.run
 ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
 ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
+# Set CUDA env variables
+export PATH=$PATH:/usr/local/cuda/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
+
 # Persist PATH and LD_LIBRARY_PATH to container runtime
 echo "" >> /environment
 echo "export PATH=${PATH}" >> /environment
