@@ -1,0 +1,35 @@
+# Create a singularity container with CUDA and MPI support
+
+BootStrap: docker
+From: ubuntu:zesty
+
+%post
+# Set PATH and LD_LIBRARY_PATH
+export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
+export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
+
+# Install MPICH
+apt-get install -y mpich
+
+# Install GCC compatable with CUDA/7.5
+apt-get install -y gcc-4.9 g++-4.9
+
+# Install the toolkit
+wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
+export PERL5LIB=.
+sh cuda_7.5.18_linux.run --silent --toolkit --override
+rm cuda_7.5.18_linux.run
+
+# Patch CUDA toolkit to work with non system default GCC
+ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
+ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
+
+# Persist PATH and LD_LIBRARY_PATH to container runtime
+echo "" >> /environment
+echo "export PATH=${PATH}" >> /environment
+echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
+
+# Patch container to work on Titan
+wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
+./TitanPrep.sh
+rm TitanPrep.sh
