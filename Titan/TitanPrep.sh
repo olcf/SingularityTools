@@ -15,11 +15,10 @@ echo "unset PKG_CONFIG_PATH" >> /environment
 # These variables are expected to be set at container runtime(e.g. in the module file loading the container)
 # SYSUTILS_DEFAULT_DIR=`readlink -f /opt/cray/sysutils/default`
 # WLM_DEFAULT_DIR=`readlink -f /opt/cray/wlm_detect/default`
-# GNU_MPICH_LIB_DIR=`readlink -f /opt/cray/mpt/default/gni/mpich-GNU/5.1/lib`
 # CRAY_NVIDIA_DRIVER_LIB_DIR=`readlink -f /opt/cray/nvidia/default/lib64`
 ####
 
-# Make sure Cray MPICH libraries are in container LD_LIBRARY_PATH
+# Make sure Cray MPI/ALPS related libraries are in container LD_LIBRARY_PATH
 echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CRAY_LD_LIBRARY_PATH}:${SYSUTILS_DEFAULT_DIR}/lib64:${WLM_DEFAULT_DIR}/lib64' >> /environment
 
 ####
@@ -63,6 +62,6 @@ mv ${c_mpich} ${c_mpich}.original
 mv ${cxx_mpich} ${cxx_mpich}.original
 mv ${f_mpich} ${f_mpich}.original
 
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/5.1/lib/libmpich.so ${c_mpich}
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/5.1/lib/libmpichcxx.so ${cxx_mpich}
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/5.1/lib/libfmpich.so ${f_mpich}
+ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libmpich.so ${c_mpich}
+ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libmpichcxx.so ${cxx_mpich}
+ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libfmpich.so ${f_mpich}

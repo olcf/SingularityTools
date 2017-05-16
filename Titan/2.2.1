@@ -10,12 +10,19 @@ set appname singularity
 set machine titan
 set version 2.2.1
 
-unload PrgEnv-pgi
-unload PrgEnv-intel
-unload PrgEnv-cray
-unload PrgEnv-gnu
+# Ensure that the correct environment variables are picked up in the container
+# assuming TitanPrep.sh has been run on the image
 
-load PrgEnv-gnu
+if { [ is-loaded PrgEnv-pgi ] } {
+  module swap PrgEnv-pgi PrgEnv-gnu
+}
+if { [ is-loaded PrgEnv-intel ] } {
+  module swap PrgEnv-intel PrgEnv-gnu
+}
+if { [ is-loaded PrgEnv-cray ] } {
+  module swap PrgEnv-cray PrgEnv-gu
+}
+module swap gcc gcc/4.9.3
 
 setenv SYSUTILS_DEFAULT_DIR [exec readlink -f /opt/cray/sysutils/default]
 setenv WLM_DEFAULT_DIR [exec readlink -f /opt/cray/wlm_detect/default]
