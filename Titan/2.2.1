@@ -1,0 +1,28 @@
+#%Module
+# singularity
+
+proc ModulesHelp { } {
+   puts stderr "Provide a user environment suitable for running Singularity containers"
+}
+module-whatis "Provide a user environment suitable for running Singularity containers"
+
+set appname singularity
+set machine titan
+set version 2.2.1
+
+unload PrgEnv-pgi
+unload PrgEnv-intel
+unload PrgEnv-cray
+unload PrgEnv-gnu
+
+load PrgEnv-gnu
+
+setenv SYSUTILS_DEFAULT_DIR [exec readlink -f /opt/cray/sysutils/default]
+setenv WLM_DEFAULT_DIR [exec readlink -f /opt/cray/wlm_detect/default]
+setenv CRAY_NVIDIA_DRIVER_LIB_DIR [exec readlink -f /opt/cray/nvidia/default/lib64]
+setenv CRAY_NVIDIA_DRIVER_BIN_DIR [exec readlink -f /opt/cray/nvidia/default/bin]
+
+#
+##-- end
+#
+
