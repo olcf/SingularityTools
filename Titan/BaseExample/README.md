@@ -1,5 +1,5 @@
 # Example: Base container
-To facilitate building containers suitable for deployment on Titan a helper script, `TitanPrep.sh`, has been created which will automatically create the neccessary bind points, setup environment variables, and attempt to overwrite the distro installed `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPI` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of building `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system you have root privilidge on or through a service such as `Singularity Hub`.
+To facilitate building containers suitable for deployment on Titan a helper script, `TitanPrep.sh`, has been created which will automatically create the neccessary bind points, setup environment variables, and attempt to overwrite the container provided `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPICH` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of building `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilidge on or through a service such as `Singularity Hub`.
 
 ## Definition walkthrough
 ```
@@ -11,7 +11,7 @@ From: ubuntu:zesty
 export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
-# Install MPICH
+# Install basic system software
 apt-get install -y software-properties-common wget pkg-config
 apt-add-repository universe
 apt-get update
@@ -19,6 +19,7 @@ apt-get update
 These first few lines specify the base `Ubuntu Zesty` container which will be pulled from `Docker Hub`; This is handy  as it removes any package manager dependencies on our host system although requires a few extra lines to setup a basic environment as shown.
 
 ```
+# Install MPICH
 apt-get install -y mpich
 ```
 Installing the distro provided `MPICH` package will serve as a base for building future packages within the container and will later be patched to be comptabile with `Cray MPT`.
