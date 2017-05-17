@@ -90,7 +90,8 @@ Hello from Ubuntu 17.04 : rank  1 of 2
 $ aprun -n 1 singularity exec ZestyTitan.img ./cuda.out 
 hello from the GPU
 
-$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python mpi4py.out
-
+$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python HelloMPI4PY.py 
+Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 1 of 2 
+Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 0 of 2
 ```
 Once the applications have been built they can be executed on compute nodes through `aprun`. Note that the message `WARNING: Not mounting current directory: host does not support PR_SET_NO_NEW_PRIVS` can be ignored and should be removed in the next Singularity release.
