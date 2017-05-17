@@ -33,6 +33,10 @@ ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
+# Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
+apt-get install -y python-pip
+pip install mpi4py
+
 # Persist PATH and LD_LIBRARY_PATH to container runtime
 echo "" >> /environment
 echo "export PATH=${PATH}" >> /environment

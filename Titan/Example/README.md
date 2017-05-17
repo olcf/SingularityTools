@@ -1,5 +1,5 @@
 # Example: Base container
-To facilitate building containers suitable for deployment on Titan a helper script, `TitanPrep.sh`, has been created which will automatically create the neccessary bind points, setup environment variables, and attempt to overwrite the container provided `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPICH` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of building `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilidge on or through a service such as `Singularity Hub`.
+To facilitate building containers suitable for deployment on Titan a helper script, `TitanPrep.sh`, has been created which will automatically create the neccessary bind points, setup environment variables, and attempt to overwrite the container provided `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPICH` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of supporting `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilidge on or through a service such as `Singularity Hub`.
 
 ## Definition walkthrough
 ```
@@ -42,12 +42,19 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib6
 The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatable with `CUDA/7.5` and sets up appropriate environment variables.
 
 ```
+# Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
+apt-get install -y python-pip
+pip install mpi4py
+```
+With the base container setup we are now free to install packages utalizing MPI and CUDA. Care must be taken to ensure that all packages dependent on `MPI` are built against `MPICH`. For example the prebuilt `Ubuntu` package `python-mpi4py` is built against `OpenMPI` and so must not be used; We can however install `mpi4py` with `pip` to ensure it will be built against the previously installed `MPICH` package.
+
+```
 # Persist PATH and LD_LIBRARY_PATH to container runtime
 echo "" >> /environment
 echo "export PATH=${PATH}" >> /environment
 echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
 ```
-`Singularity` sources the `/environment` file during container runtime, here we ensure that any environment variables required at runtime are persisted.
+Singularity sources the `/environment` file during container runtime, here we ensure that any environment variables required at runtime are persisted.
 
 ```
 # Patch container to work on Titan
@@ -55,17 +62,17 @@ wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanP
 sh TitanPrep.sh
 rm TitanPrep.sh
 ```
-Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Ubuntu` provided `MPICH` installation.
+Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Ubuntu` provided `MPICH` installation. It's important to note that at this point the container will not function properly on any system but Titan as the `MPICH` libraries have been replaced by symlinks which are only resolvable on Titan.
 
 ## Building the container
 ```
 $ sudo singularity create --size 8000 ZestyTitan.img
 $ sudo singularity bootstrap ZestyTitan.img Titan.def
 ```
-Building the container does not provide any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
+Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
 
 ## Transfering the container
-Once the container has been built on a local resource it can be transfered to the OLCF. Currently Globus Online is the recomended way to facilitate this transfer.
+Once the container has been built on a local resource it can be transfered to the OLCF using standard data transfer utilities. Currently Globus Online is the recomended way to facilitate this transfer.
 
 ## Running the container
 ```
@@ -82,5 +89,8 @@ Hello from Ubuntu 17.04 : rank  1 of 2
 
 $ aprun -n 1 singularity exec ZestyTitan.img ./cuda.out 
 hello from the GPU
+
+$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python mpi4py.out
+
 ```
-Once the applications have been built they can be executed on compute nodes through `aprun`.
+Once the applications have been built they can be executed on compute nodes through `aprun`. Note that the message `WARNING: Not mounting current directory: host does not support PR_SET_NO_NEW_PRIVS` can be ignored and should be removed in the next Singularity release.
