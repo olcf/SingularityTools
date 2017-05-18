@@ -1,0 +1,25 @@
+#%Module
+# tensorflow
+
+proc ModulesHelp { } {
+   puts stderr "Provide GPU enabled tensorflow/1.0.1 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+}
+module-whatis "Provide GPU enabled tensorflow/1.0.1 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+
+set appname tensorflow
+set machine titan
+set version 1.0.0
+
+if { ! [ is-loaded singularity ] } {
+  module load singularity
+}
+
+setenv TENSORFLOW_CONTAINER /autofs/nccs-svm1_sw/titan/tensorflow/tensorflow_x86.img
+
+# This can be removed when container is rebuilt against current TitanPrep.sh
+setenv GNU_MPICH_LIB_DIR [exec readlink -f /opt/cray/mpt/default/gni/mpich-GNU/5.1/lib]
+
+#
+##-- end
+#
+
