@@ -80,7 +80,7 @@ $ module load singularity
 $ singularity exec ZestyTitan.img mpicc HelloMPI.c -o mpi.out
 $ singularity exec ZestyTitan.img nvcc HelloCuda.cu -o cuda.out
 ```
-Within an interactive or batch job applications can be built and run utilizing the containers software stack. Full `/lustre` access is available from inside the container and the directory in which singularity is launched from will be the current working directory inside of the container. In this case the source code `HelloMPI.c` and `HelloCuda.cu` exists outside of the container on `lustre` and the applications `mpi.out` and `cuda.out` will be created in the same `lustre` directory. The singularity module sets environment variables which work in conjunction with the helper script `TitanPrep.sh` to ensure the `MPICH` and `CUDA` Titan specific patches work correctly.
+Within an interactive or batch job applications can be built and run utilizing the containers software stack. Full `/lustre` access is available from inside the container and the directory in which singularity is launched from will be the current working directory inside of the container. In this case the source code `HelloMPI.c`, `HelloCuda.cu`, and `HelloMPI.py` exists outside of the container on `lustre` and the applications `mpi.out` and `cuda.out` will be created in the same `lustre` directory. The singularity module sets environment variables which work in conjunction with the helper script `TitanPrep.sh` to ensure the `MPICH` and `CUDA` Titan specific patches work correctly.
 
 ```
 $ aprun -n 2 -N 1 singularity exec ZestyTitan.img ./mpi.out 
@@ -90,7 +90,7 @@ Hello from Ubuntu 17.04 : rank  1 of 2
 $ aprun -n 1 singularity exec ZestyTitan.img ./cuda.out 
 hello from the GPU
 
-$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python HelloMPI4PY.py 
+$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python HelloMPI.py 
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 1 of 2 
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 0 of 2
 ```
