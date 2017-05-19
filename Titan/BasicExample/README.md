@@ -66,8 +66,8 @@ Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the
 
 ## Building the container
 ```bash
-$ sudo singularity create --size 8000 ZestyTitan.img
-$ sudo singularity bootstrap ZestyTitan.img ZestyTitan.def
+$ sudo singularity create --size 8000 UbuntuTitan.img
+$ sudo singularity bootstrap UbuntuTitan.img UbuntuTitan.def
 ```
 Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
 
@@ -77,20 +77,20 @@ Once the container has been built on a local resource it can be transferred to t
 ## Running the container
 ```bash
 $ module load singularity
-$ singularity exec ZestyTitan.img mpicc HelloMPI.c -o mpi.out
-$ singularity exec ZestyTitan.img nvcc HelloCuda.cu -o cuda.out
+$ singularity exec UbuntuTitan.img mpicc HelloMPI.c -o mpi.out
+$ singularity exec UbuntuTitan.img nvcc HelloCuda.cu -o cuda.out
 ```
 Within an interactive or batch job applications can be built and run utilizing the containers software stack. Full `/lustre` access is available from inside the container and the directory in which singularity is launched from will be the current working directory inside of the container. In this case the source code `HelloMPI.c`, `HelloCuda.cu`, and `HelloMPI.py` exists outside of the container on `lustre` and the applications `mpi.out` and `cuda.out` will be created in the same `lustre` directory. The singularity module sets environment variables which work in conjunction with the helper script `TitanPrep.sh` to ensure the `MPICH` and `CUDA` Titan specific patches work correctly.
 
 ```bash
-$ aprun -n 2 -N 1 singularity exec ZestyTitan.img ./mpi.out
+$ aprun -n 2 -N 1 singularity exec UbuntuTitan.img ./mpi.out
 Hello from Ubuntu 17.04 : rank  0 of 2
 Hello from Ubuntu 17.04 : rank  1 of 2
 
-$ aprun -n 1 singularity exec ZestyTitan.img ./cuda.out
+$ aprun -n 1 singularity exec UbuntuTitan.img ./cuda.out
 hello from the GPU
 
-$ aprun -n 2 -N 1 singularity exec ZestyTitan.img python HelloMPI.py 
+$ aprun -n 2 -N 1 singularity exec UbuntuTitan.img python HelloMPI.py 
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 1 of 2 
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 0 of 2
 ```
