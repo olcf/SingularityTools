@@ -30,8 +30,7 @@ echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CRAY_LD_LIBRARY_PATH}:${SYSUTI
 echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CRAY_NVIDIA_DRIVER_LIB_DIR}' >> /environment
 echo 'export PATH=$PATH:${CRAY_NVIDIA_DRIVER_BIN_DIR}' >> /environment
 
-
-# Mount point for Cray files needed for MPI
+# Mount point for Cray files
 mkdir -p /opt/cray
 
 # Mount point for Cray files needed for ALSP runtime
@@ -50,18 +49,23 @@ f_mpich=`ldconfig -p | grep libmpichfort.so | awk 'NR1==1 {print $4}' | xargs re
 
 if [ ! -f ${c_mpich} ]; then
   echo "libmpich.so not found!"
+  exit 1
 fi
 if [ ! -f ${cxx_mpich} ]; then
-echo "libmpichcxx.so not found!"
+  echo "libmpichcxx.so not found!"
+  exit 1
 fi
 if [ ! -f ${f_mpich} ]; then
   echo "libmpichfort.so not found!"
+  exit 1
 fi
 
+# Keep a copy of original
 mv ${c_mpich} ${c_mpich}.original
 mv ${cxx_mpich} ${cxx_mpich}.original
 mv ${f_mpich} ${f_mpich}.original
 
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libmpich.so ${c_mpich}
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libmpichcxx.so ${cxx_mpich}
-ln -nsf /opt/cray/mpt/7.5.2/gni/mpich-gnu/4.9/lib/libfmpich.so ${f_mpich}
+# Replace MPICH libraries with symlink to Cray MPT libraries
+ln -nsf /sw/titan/singularity/mpich/lib/libmpich.so ${c_mpich}
+ln -nsf /sw/titan/singularity/mpich/lib/libmpichcxx.so ${cxx_mpich}
+ln -nsf /sw/titan/singularity/mpich/lib/libfmpich.so ${f_mpich}
