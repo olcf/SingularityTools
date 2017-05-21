@@ -1,0 +1,57 @@
+BootStrap: docker
+From: ubuntu:zesty
+IncludeCmd: yes
+
+%pre
+  # Mount point for Cray files needed for MPI
+  mkdir -p ${SINGULARITY_ROOTFS}/opt/cray
+
+  # Mount point for Cray files needed for ALSP runtime
+  mkdir -p ${SINGULARITY_ROOTFS}/var/spool/alps
+  mkdir -p ${SINGULARITY_ROOTFS}/var/opt/cray
+
+  # Mount lustre
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas1
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas2
+
+%setup
+  mkdir ${SINGULARITY_ROOTFS}/build
+  cp -r build/OMPI_BUILD/*.deb ${SINGULARITY_ROOTFS}/build
+
+  # Symlinks cant always be followed in the container as the links arent mounted so we place them in /environment
+  # which singularity currently sources
+  echo "" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin" >> ${SINGULARITY_ROOTFS}/environment
+  echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CRAY_LD_LIBRARY_PATH}:`readlink -f /opt/cray/wlm_detect/default`/lib64:/usr/lib/x86_64-linux-gnu' >> ${SINGULARITY_ROOTFS}/environment
+  echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:'`readlink -f /opt/cray/wlm_detect/default`/lib64 >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PS1=SingularityShell" >> ${SINGULARITY_ROOTFS}/environment
+
+  # The PYTHONPATH is passed in and likely not what we want
+  echo "export PYTHONPATH=''" >> ${SINGULARITY_ROOTFS}/environment
+%post
+ # Environment isnt sourced in post but contains variables we need set
+  . /environment
+
+  # Supress some messages from apt related to being in a minimal install
+  export DEBIAN_FRONTEND=noninteractive
+
+  apt-get update
+  apt-get install -y build-essential libxml2 libxml2-dev libhwloc5 libhwloc-dev libmunge-dev
+
+  cd /
+  # Install all OpenMPI debs
+  dpkg -i --force-all build/openmpi-common_2.0.2-2_all.deb  
+  dpkg -i --force-all build/openmpi-bin_2.0.2-2_amd64.deb
+  dpkg -i --force-all build/libopenmpi2_2.0.2-2_amd64.deb
+  dpkg -i --force-all build/libopenmpi-dev_2.0.2-2_amd64.deb
+
+  # Install any missing dependencies
+  apt-get install -y -f
+
+  # Runtime OMPI flags needed on Cray
+  echo "export OMPI_MCA_mpi_leave_pinned=0" >> /environment
+  echo "export OMPI_MCA_mpi_leave_pinned_pipeline=0" >> /environment
+
+  # Install mpi4py
+  apt-get install -y python-mpi4py

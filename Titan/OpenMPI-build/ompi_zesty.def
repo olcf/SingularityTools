@@ -1,0 +1,62 @@
+BootStrap: docker
+From: ubuntu:zesty
+IncludeCmd: yes
+
+%pre
+  # Mount point for Cray files needed for MPI
+  mkdir -p ${SINGULARITY_ROOTFS}/opt/cray
+
+  # Mount point for Cray files needed for ALSP runtime
+  mkdir -p ${SINGULARITY_ROOTFS}/var/spool/alps
+  mkdir -p ${SINGULARITY_ROOTFS}/var/opt/cray
+
+  # Mount lustre
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas1
+  mkdir -p ${SINGULARITY_ROOTFS}/lustre/atlas2
+
+%setup
+  # OpenMPI quiries the CLE release file
+  cp /etc/opt/cray/release/clerelease ${SINGULARITY_ROOTFS}
+
+  # wlm_detect is in /usr/lib64/pkgconfig which isnt exposed to the container
+  SYSUTILS_DEFAULT_DIR=`readlink -f /opt/cray/sysutils/default`
+  WLM_DEFAULT_DIR=`readlink -f /opt/cray/wlm_detect/default`
+  PMI_DEFAULT_DIR=`readlink -f /opt/cray/pmi/default`
+  UGNI_DEFAULT_DIR=`readlink -f /opt/cray/ugni/default`
+  UDREG_DEFAULT_DIR=`readlink -f /opt/cray/udreg/default`
+
+  # Symlinks cant always be followed in the container as the links arent mounted so we place them in /environment
+  # which singularity currently sources
+  echo "" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PMI_DEFAULT_DIR=${PMI_DEFAULT_DIR}" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export UGNI_DEFAULT_DIR=${UGNI_DEFAULT_DIR}" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export UDREG_DEFAULT_DIR=${UDREG_DEFAULT_DIR}" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CRAY_LD_LIBRARY_PATH}:${WLM_DEFAULT_DIR}/lib64:${SYSUTILS_DEFAULT_DIR}/lib64:/usr/lib/x86_64-linux-gnu" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PKG_CONFIG_PATH=${WLM_DEFAULT_DIR}/lib64/pkgconfig/:${SYSUTILS_DEFAULT_DIR}/lib64/pkgconfig/:${PKG_CONFIG_PATH}" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export PS1=SingularityShell" >> ${SINGULARITY_ROOTFS}/environment
+  echo "export SINGULARITY_SHELL=/bin/bash" >> ${SINGULARITY_ROOTFS}/environment
+
+%post
+  # Environment isnt sourced in post but contains variables we need set
+  . /environment
+
+  # Supress some messages from apt related to being in a minimal install
+  export DEBIAN_FRONTEND=noninteractive
+
+  # Enable grabbing source packages
+  sed -i '/deb-src/s/#//g' /etc/apt/sources.list
+
+  apt-get update
+  apt-get install -y dh-make devscripts build-essential lintian apt-utils pax-utils strace gfortran ltrace libssl-dev zlib1g zlib1g-dev pkg-config wget git vim binutils dpkg-dev libtool automake autoconf flex ssh expat libxmlrpc-epi-dev libexpat1-dev libxml2 libxml2-dev libhwloc-dev libmunge-dev
+
+  # Remove me after modifying for Cray:
+  apt-get install -y chrpath libcr-dev default-jdk
+
+  mkdir -p /etc/opt/cray/release/
+  cp /clerelease /etc/opt/cray/release
+
+  # Runtime OMPI flags needed on Cray
+  echo "export OMPI_MCA_mpi_leave_pinned=0" >> /environment
+  echo "export OMPI_MCA_mpi_leave_pinned_pipeline=0" >> /environment
