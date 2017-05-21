@@ -182,6 +182,7 @@ override_dh_install:
 		cp -a debian/tmp/usr/share/man/man1/shmemcc.1 debian/libopenmpi-dev/usr/share/man/man1 ; \
 		cp -a debian/tmp/usr/share/man/man1/shmemfort.1 debian/libopenmpi-dev/usr/share/man/man1 ; \
 	fi
+        # Modified by Adam S. to add alps and UGNI components
 	if test -f debian/tmp/${LIBDIR}/openmpi/lib/libmca_common_alps.so.20.0.0 ; then \
 		cp -a debian/tmp/${LIBDIR}/openmpi/lib/libmca_common_alps.so.20.0.0 \
 			debian/libopenmpi2/${LIBDIR}/openmpi/lib/libmca_common_alps.so.20.0.0 ; \

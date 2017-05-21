@@ -5,6 +5,7 @@ sudo singularity create --size 2000 ompi_zesty.img
 sudo -E singularity bootstrap ompi_zesty.img ompi_zesty.def
 
 # Build debs outside of bootstrap as /lustre not mounted during bootstrap
+# This step must be performed on Titan
 mkdir build && cd build
 cp ../build_omp.sh .
 singularity exec ../ompi_zesty.img ./build_omp.sh 
