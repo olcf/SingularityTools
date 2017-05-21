@@ -8,8 +8,12 @@ From: centos:7
 export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
-# Install MPICH
+# Install basic system software
 yum -y install wget
+yum -y install epel-release python-devel
+yum repolist
+
+# Install MPICH
 yum -y install mpich mpich-devel
 export PATH=$PATH:/usr/lib64/mpich/bin
 
@@ -24,8 +28,6 @@ export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
-yum -y install epel-release python-devel
-yum repolist
 yum -y install python-pip
 pip install --upgrade pip
 
