@@ -13,7 +13,7 @@ export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
 # Install basic system software
 yum -y install wget
-yum -y install epel-release python-devel
+yum -y install epel-release
 yum repolist
 ```
 These first few lines specify the base `Centos 7` container which will be pulled from `Docker Hub`; This is handy  as it removes any package manager dependencies on our host system although requires a few extra lines to setup a basic environment as shown.
@@ -40,7 +40,7 @@ The `CUDA Toolkit` can be installed using the `NVIDA` provided installation util
 
 ```sh
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
-yum -y install python-pip
+yum -y install python-devel python-pip
 pip install --upgrade pip
 
 pip install mpi4py

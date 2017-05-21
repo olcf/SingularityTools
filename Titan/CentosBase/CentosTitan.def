@@ -10,7 +10,7 @@ export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
 # Install basic system software
 yum -y install wget
-yum -y install epel-release python-devel
+yum -y install epel-release
 yum repolist
 
 # Install MPICH
@@ -28,7 +28,7 @@ export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
-yum -y install python-pip
+yum -y install python-devel python-pip
 pip install --upgrade pip
 
 pip install mpi4py
