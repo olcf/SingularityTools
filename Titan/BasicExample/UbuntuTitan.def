@@ -16,22 +16,22 @@ apt-get update
 # Install MPICH
 apt-get install -y mpich
 
-# Install GCC compatable with CUDA/7.5
-apt-get install -y gcc-4.9 g++-4.9
-
 # Install the toolkit
 wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
 export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
 
-# Patch CUDA toolkit to work with non system default GCC
-ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
-ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
-
 # Set CUDA env variables
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
+
+# Install GCC compatable with CUDA/7.5
+apt-get install -y gcc-4.9 g++-4.9
+
+# Patch CUDA toolkit to work with non system default GCC
+ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
+ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
 apt-get install -y python-pip

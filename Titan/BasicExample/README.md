@@ -31,13 +31,16 @@ export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
 
-# Patch CUDA toolkit to work with non system default GCC
-ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
-ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
-
 # Set CUDA env variables
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
+
+# Install GCC compatable with CUDA/7.5
+apt-get install -y gcc-4.9 g++-4.9
+
+# Patch CUDA toolkit to work with non system default GCC
+ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
+ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 ```
 The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatible with `CUDA/7.5` and sets up appropriate environment variables.
 
