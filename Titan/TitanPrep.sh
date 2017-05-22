@@ -6,7 +6,7 @@
 # Print commands executed
 set -x
 
-echo '[ -z $SINGULARITY_MODULE_LOADED ] && echo "singularity module not load!"' >> /environment
+echo '[ -z "$SINGULARITY_MODULE_LOADED" ] && echo "WARNING: singularity module not load!"' >> /environment
 
 # Don't pass PYTHONSTARTUP into container
 echo "unset PYTHONSTARTUP" >> /environment
