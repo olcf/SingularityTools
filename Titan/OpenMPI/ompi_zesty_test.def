@@ -14,14 +14,14 @@ IncludeCmd: yes
   export DEBIAN_FRONTEND=noninteractive
 
   apt-get update
-  apt-get install -y build-essential libxml2 libxml2-dev libhwloc5 libhwloc-dev libmunge-dev
+  apt-get install -y wget build-essential libxml2 libxml2-dev libhwloc5 libhwloc-dev libmunge-dev
 
   cd /
   # Install all OpenMPI debs
-  dpkg -i --force-all build/openmpi-common_2.0.2-2_all.deb  
-  dpkg -i --force-all build/openmpi-bin_2.0.2-2_amd64.deb
-  dpkg -i --force-all build/libopenmpi2_2.0.2-2_amd64.deb
-  dpkg -i --force-all build/libopenmpi-dev_2.0.2-2_amd64.deb
+  dpkg -i --force-all openmpi-common_2.0.2-2_all.deb  
+  dpkg -i --force-all openmpi-bin_2.0.2-2_amd64.deb
+  dpkg -i --force-all libopenmpi2_2.0.2-2_amd64.deb
+  dpkg -i --force-all libopenmpi-dev_2.0.2-2_amd64.deb
 
   # Install any missing dependencies
   apt-get install -y -f
