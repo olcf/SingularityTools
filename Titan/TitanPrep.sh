@@ -9,7 +9,7 @@ set -x
 # Don't pass PYTHONSTARTUP into container
 echo "unset PYTHONSTARTUP" >> /environment
 # Don't pass PKG_CONFIG_PATH unless requested
-echo "[ -z "$KEEP_PKG_CONFIG" ] && unset PKG_CONFIG_PATH" >> /environment
+echo '[ -z "$KEEP_PKG_CONFIG" ] && unset PKG_CONFIG_PATH' >> /environment
 
 ####
 # Setup Cray MPI
