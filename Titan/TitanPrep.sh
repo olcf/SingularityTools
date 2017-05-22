@@ -6,6 +6,7 @@
 # Print commands executed
 set -x
 
+# Check to see if the singularity modulefile is loaded
 echo '[ -z "$SINGULARITY_MODULE_LOADED" ] && echo "WARNING: singularity module not load!"' >> /environment
 
 # Don't pass PYTHONSTARTUP into container
