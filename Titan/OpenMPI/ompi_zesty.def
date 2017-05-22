@@ -44,6 +44,7 @@ IncludeCmd: yes
   # Persist PATH and LD_LIBRARY_PATH to container runtime
   echo "export PATH=${PATH}" >> /environment
   echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
+  echo "export KEEP_PKG_CONFIG=1" >> /environment 
 
   # Patch container to work on Titan
   wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh

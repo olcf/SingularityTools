@@ -4,9 +4,9 @@ apt-get source openmpi
 cd openmpi-2.0.2
 
 # Copy updated rules and control files which contain Cray specific configure options
-cp ../DEB_files/rules debian
-cp ../DEB_files/control debian
-cp ../DEB_files/libopenmpi2.links.in debian
+cp ../../DEB_files/rules debian
+cp ../../DEB_files/control debian
+cp ../../DEB_files/libopenmpi2.links.in debian
 
 dpkg-source --commit
 

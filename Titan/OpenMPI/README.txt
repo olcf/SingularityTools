@@ -13,3 +13,5 @@ singularity exec ../ompi_zesty.img ./build_omp.sh
 # Install the OpenMPI .debs inside a test container
 sudo singularity create --size 2000 ompi_zesty_test.img
 sudo singularity bootstrap ompi_zesty_test.img ompi_zesty_test.def
+
+# TODO: Include ALIEN example for CENTOS

@@ -1,4 +1,4 @@
-# Adam S. Add alps and ugni components
+# Modified by Adam S. to add alps and UGNI components
 
 # Compatibility links to /usr/bin
 usr/lib/@TRIPLET@/openmpi/lib/libmca_common_alps.so.20.0.0   usr/lib/@TRIPLET@/libmca_common_alps.so.20.0.0
