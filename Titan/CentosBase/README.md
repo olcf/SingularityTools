@@ -9,10 +9,10 @@ From: centos:7
 %post
 # Set PATH and LD_LIBRARY_PATH
 export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
-export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
+export LD_LIBRARY_PATH=/usr/local/lib
 
 # Install basic system software
-yum -y install wget
+yum -y install wget gcc-c++ redhat-lsb
 yum -y install epel-release
 yum repolist
 ```
