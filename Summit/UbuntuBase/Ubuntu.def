@@ -9,6 +9,7 @@ export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
 # Install basic system software
+apt-get update
 apt-get install -y software-properties-common wget pkg-config
 apt-add-repository universe
 apt-get update
