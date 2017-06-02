@@ -9,7 +9,7 @@ sudo -E singularity bootstrap ompi_zesty.img ompi_zesty.def
 module load singularity
 mkdir build && cd build
 cp ../build_omp.sh .
-singularity exec ../ompi_zesty.img ./build_omp.sh 
+singularity exec ../ompi_zesty.img ./build_ompi.sh 
 
 # Install the OpenMPI .debs inside a test container
 cd ..
