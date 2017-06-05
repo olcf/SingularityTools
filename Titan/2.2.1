@@ -29,6 +29,21 @@ setenv WLM_DEFAULT_DIR [exec readlink -f /opt/cray/wlm_detect/default]
 setenv CRAY_NVIDIA_DRIVER_LIB_DIR [exec readlink -f /opt/cray/nvidia/default/lib64]
 setenv CRAY_NVIDIA_DRIVER_BIN_DIR [exec readlink -f /opt/cray/nvidia/default/bin]
 
+# Unset a few variables within the container
+setenv SINGULARITYENV_PYTHONSTARTUP ""
+setenv SINGULARITYENV_PKG_CONFIG_PATH ""
+
+# LD_PRELOAD Cray's MPI libraries
+set C_MPICH_SO readlink -f /opt/cray/nvidia/default/lib64/libmpich.so
+set CXX_MPICH_SO readlink -f /opt/cray/nvidia/default/lib64/libmpichcxx.so
+set F_MPICH_SO readlink -f /opt/cray/nvidia/default/lib64/libfmpich.so
+setenv SINGULARITYENV_LD_PRELOAD ${C_MPICH_SO}:${CXX_MPICH_SO}:${F_MPICH_SO}
+
+# Ensure Cray specific libraries are appended to LD_LIBRARY_PATH
+# @TODO: Remove CRAY_NVIDIA components when singularity/2.3 released
+setenv SINGULARITYENV_LD_LIBRARY_PATH ${CRAY_LD_LIBRARY_PATH}:${SYSUTILS_DEFAULT_DIR}/lib64:${WLM_DEFAULT_DIR}/lib64:${CRAY_NVIDIA_DRIVER_LIB_DIR}
+setenv SINGULARITYENV_PATH ${CRAY_NVIDIA_DRIVER_BIN_DIR} 
+
 setenv SINGULARITY_MODULE_LOADED 1
 
 #
