@@ -1,4 +1,4 @@
-# Create a singularity container with CUDA and MPI support
+# Create a singularity container with R, CUDA, and MPI support
 
 BootStrap: docker
 From: ppc64le/ubuntu:zesty
@@ -36,8 +36,8 @@ ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
 ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
 # Install R
-apt-get install -y gfortran build-essential libreadline7 libreadline-dev xorg-dev openjdk-8-jdk bzip2 libbz2-1.0 libbz2-dev
-apt-get install -y liblzma5 liblzma-dev libpcre3 libpcre3-dev libcurl4-openssl-dev
+apt-get install -y gfortran build-essential libreadline-dev xorg-dev openjdk-8-jdk libbz2-dev
+apt-get install -y liblzma-dev libpcre3-dev libcurl4-openssl-dev
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 wget https://cloud.r-project.org/src/base/R-3/R-3.4.0.tar.gz
 tar xf R-3.4.0.tar.gz
