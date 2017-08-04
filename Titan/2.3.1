@@ -8,7 +8,7 @@ module-whatis "Provide a user environment suitable for running Singularity conta
 
 set appname singularity
 set machine titan
-set version 2.2.1
+set version 2.3.1
 
 # Ensure that the correct environment variables are picked up in the container
 # assuming TitanPrep.sh has been run on the image
@@ -24,27 +24,37 @@ if { [ is-loaded PrgEnv-cray ] } {
 }
 module swap gcc gcc/4.9.3
 
-setenv SYSUTILS_DEFAULT_DIR [exec readlink -f /opt/cray/sysutils/default]
-setenv WLM_DEFAULT_DIR [exec readlink -f /opt/cray/wlm_detect/default]
-set CRAY_NVIDIA_DRIVER_LIB_DIR [exec readlink -f /opt/cray/nvidia/default/lib64]
-set CRAY_NVIDIA_DRIVER_BIN_DIR [exec readlink -f /opt/cray/nvidia/default/bin]
+#set CRAY_NVIDIA_DRIVER_LIB_DIR [exec readlink -f /opt/cray/nvidia/default/lib64]
+#set CRAY_NVIDIA_DRIVER_BIN_DIR [exec readlink -f /opt/cray/nvidia/default/bin]
 
 # Unset a few variables within the container
 setenv SINGULARITYENV_PYTHONSTARTUP ""
 setenv SINGULARITYENV_PKG_CONFIG_PATH ""
 
-# LD_PRELOAD Cray's MPI libraries
-# These should be the abi variants but currently the abi libraries point to the standard libmpich libraries
+# Find Cray's MPI libraries 
+# These should perhaps be the abi variants Cray provides but currently 
+# the abi libraries point to the standard libmpich libraries
 set C_MPICH_SO [exec readlink -f /opt/cray/mpt/default/gni/mpich-gnu/4.9/lib/libmpich.so]
 set CXX_MPICH_SO [exec readlink -f /opt/cray/mpt/default/gni/mpich-gnu/4.9/lib/libmpichcxx.so]
 set F_MPICH_SO [exec readlink -f /opt/cray/mpt/default/gni/mpich-gnu/4.9/lib/libfmpich.so]
-setenv SINGULARITYENV_LD_PRELOAD ${C_MPICH_SO}:${CXX_MPICH_SO}:${F_MPICH_SO}
+
+# Add NVIDIA driver libraries and binaries
+set CRAY_NVIDIA_DRIVER_LIB_DIR [exec readlink -f /opt/cray/nvidia/default/lib64]
+set CRAY_NVIDIA_DRIVER_BIN_DIR [exec readlink -f /opt/cray/nvidia/default/bin]
 
 # Ensure Cray specific libraries are appended to LD_LIBRARY_PATH
-# @TODO: Remove CRAY_NVIDIA components when singularity/2.3 released
+set SYSUTILS_DEFAULT_DIR [exec readlink -f /opt/cray/sysutils/default]
+set WLM_DEFAULT_DIR [exec readlink -f /opt/cray/wlm_detect/default]
 set CRAY_LD_LIBRARY_PATH $::env(CRAY_LD_LIBRARY_PATH)
 
-# These are needed to keep Cray PMI happy when LD_PRELOADING MPI libraries
+setenv SINGULARITYENV_LD_LIBRARY_PATH "${CRAY_LD_LIBRARY_PATH}:${SYSUTILS_DEFAULT_DIR}/lib64:${WLM_DEFAULT_DIR}/lib64:${CRAY_NVIDIA_DRIVER_LIB_DIR}"
+setenv SINGULARITYENV_PATH "${CRAY_NVIDIA_DRIVER_BIN_DIR}"
+
+# Inject Cray's MPI libs using dl_intercept
+setenv SINGULARITYENV_LD_AUDIT "/lustre/atlas/scratch/atj/stf007/SingularityTools/Titan/libdl-intercept.so"
+setenv SINGULARITYENV_DL_INTERCEPT "libmpich.so:${C_MPICH_SO},libmpichcxx.so:${CXX_MPICH_SO},libmpichfort.so:${F_MPICH_SO}"
+
+# These are needed to keep Cray PMI happy when LD_PRELOAD'ing MPI libraries
 setenv PMI_NO_FORK 1
 setenv PMI_NO_PREINITIALIZE 1
 
