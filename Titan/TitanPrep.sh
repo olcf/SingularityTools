@@ -19,3 +19,8 @@ mkdir -p /var/opt/cray
 mkdir -p /lustre/atlas
 mkdir -p /lustre/atlas1
 mkdir -p /lustre/atlas2
+
+# Mount point for /sw
+mkdir -p /sw
+mkdir -p /ccs/sw
+mkdir -p /autofs/nccs-svm1_sw
