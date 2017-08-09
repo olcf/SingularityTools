@@ -1,5 +1,5 @@
 # Base container
-The base container example provides a basis on which to build your own Singularity containers suitable for deployment on Titan. To facilitate building such containers a helper script, `TitanPrep.sh`, has been created which will automatically create the necessary bind points, setup environment variables, and attempt to overwrite the container provided `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPICH` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of supporting `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilege on or through a service such as `Singularity Hub`.
+The base container example provides a basis on which to build your own Singularity containers suitable for deployment on Titan. To facilitate building such containers a helper script, `TitanPrep.sh`, has been created which will automatically create the necessary bind points within the container. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Ubuntu Zesty(17.4)` container build capable of supporting `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilege on or through a service such as `Singularity Hub`.
 
 ## Definition walkthrough
 ```sh
@@ -7,11 +7,9 @@ BootStrap: docker
 From: ubuntu:zesty
 
 %post
-# Set PATH and LD_LIBRARY_PATH
-export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
-export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
 # Install basic system software
+apt-get update
 apt-get install -y software-properties-common wget pkg-config
 apt-add-repository universe
 apt-get update
@@ -31,10 +29,6 @@ export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
 
-# Set CUDA env variables
-export PATH=$PATH:/usr/local/cuda/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
-
 # Install GCC compatable with CUDA/7.5
 apt-get install -y gcc-4.9 g++-4.9
 
@@ -52,12 +46,11 @@ pip install mpi4py
 With the base container setup we are now free to install packages utilizing MPI and CUDA. Care must be taken to ensure that all packages dependent on `MPI` are built against `MPICH`. For example the prebuilt `Ubuntu` package `python-mpi4py` is built against `OpenMPI` and so must not be used; We can however install `mpi4py` with `pip` to ensure it will be built against the previously installed `MPICH` package.
 
 ```sh
-# Persist PATH and LD_LIBRARY_PATH to container runtime
-echo "" >> /environment
-echo "export PATH=${PATH}" >> /environment
-echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
+export PATH=${PATH-}:/usr/local/cuda/bin
 ```
-Singularity sources the `/environment` file during container runtime, here we ensure that any environment variables required at runtime are persisted.
+Lastly  ensure that any environment variables required at runtime are persisted.
 
 ```sh
 # Patch container to work on Titan
@@ -97,4 +90,3 @@ $ aprun -n 2 -N 1 singularity exec UbuntuTitan.img python HelloMPI.py
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 1 of 2 
 Hello from mpi4py ('Ubuntu', '17.04', 'zesty') : rank 0 of 2
 ```
-Once the applications have been built they can be executed on compute nodes through `aprun`. Note that the message `WARNING: Not mounting current directory: host does not support PR_SET_NO_NEW_PRIVS` can be ignored and should be removed in the next Singularity release.
