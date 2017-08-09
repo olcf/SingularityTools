@@ -46,19 +46,19 @@ pip install mpi4py
 With the base container setup we are now free to install packages utilizing MPI and CUDA. Care must be taken to ensure that all packages dependent on `MPI` are built against `MPICH`. For example the prebuilt `Ubuntu` package `python-mpi4py` is built against `OpenMPI` and so must not be used; We can however install `mpi4py` with `pip` to ensure it will be built against the previously installed `MPICH` package.
 
 ```sh
-%environment
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
-export PATH=${PATH-}:/usr/local/cuda/bin
-```
-Lastly  ensure that any environment variables required at runtime are persisted.
-
-```sh
 # Patch container to work on Titan
 wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
 sh TitanPrep.sh
 rm TitanPrep.sh
 ```
-Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Ubuntu` provided `MPICH` installation. It's important to note that at this point the container will not function properly on any system but Titan as the `MPICH` libraries have been replaced by symlinks which are only resolvable on Titan.
+`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime.
+
+```sh
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
+export PATH=${PATH-}:/usr/local/cuda/bin
+```
+Lastly  ensure that any environment variables required at runtime are persisted.
 
 ## Building the container
 ```bash
