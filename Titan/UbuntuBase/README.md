@@ -62,7 +62,7 @@ Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the
 
 ## Building the container
 ```bash
-$ sudo singularity create --size 8000 UbuntuTitan.img
+$ singularity create --size 8000 UbuntuTitan.img
 $ sudo singularity bootstrap UbuntuTitan.img UbuntuTitan.def
 ```
 Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
