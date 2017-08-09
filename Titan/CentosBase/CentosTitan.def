@@ -1,12 +1,9 @@
-# Create a singularity container with CUDA and MPI support
+# Create a CentOS 7 singularity container with CUDA and MPI support
 
 BootStrap: docker
 From: centos:7
 
 %post
-# Set PATH and LD_LIBRARY_PATH
-export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
-export LD_LIBRARY_PATH=/usr/local/lib
 
 # Install basic system software
 yum -y install wget gcc-c++ redhat-lsb
@@ -15,7 +12,6 @@ yum repolist
 
 # Install MPICH
 yum -y install mpich mpich-devel
-export PATH=$PATH:/usr/lib64/mpich/bin
 
 # Install the toolkit
 wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
@@ -23,22 +19,17 @@ export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
 
-# Set CUDA env variables
-export PATH=$PATH:/usr/local/cuda/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
-
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
 yum -y install python-devel python-pip
 pip install --upgrade pip
 
 pip install mpi4py
 
-# Persist PATH and LD_LIBRARY_PATH to container runtime
-echo "" >> /environment
-echo "export PATH=${PATH}" >> /environment
-echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
-
 # Patch container to work on Titan
 wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
 sh TitanPrep.sh
 rm TitanPrep.sh
+
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
+export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin
