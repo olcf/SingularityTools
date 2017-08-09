@@ -1,5 +1,5 @@
 # Base container
-The base container example provides a basis on which to build your own Singularity containers suitable for deployment on Titan. To facilitate building such containers a helper script, `TitanPrep.sh`, has been created which will automatically create the necessary bind points, setup environment variables, and attempt to overwrite the container provided `MPICH` shared libraries with symlinks which on Titan will resolve to the Cray provided `MPICH` libraries. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Centos 7` container build capable of supporting `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilege on or through a service such as `Singularity Hub`.
+The base container example provides a basis on which to build your own Singularity containers suitable for deployment on Titan. To facilitate building such containers a helper script, `TitanPrep.sh`, has been created which will automatically create the necessary bind points in the container. The container is still responsible for installing the `CUDA toolkit` and ensuring all `MPI` applications are built against `MPICH`. What follows is a basic `Centos 7` container build capable of supporting `MPI` and `CUDA` applications. It is assumed that you are building the container on a Linux system in which you have root privilege on or through a service such as `Singularity Hub`.
 
 ## Definition walkthrough
 ```sh
@@ -7,9 +7,6 @@ BootStrap: docker
 From: centos:7
 
 %post
-# Set PATH and LD_LIBRARY_PATH
-export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
-export LD_LIBRARY_PATH=/usr/local/lib
 
 # Install basic system software
 yum -y install wget gcc-c++ redhat-lsb
@@ -21,7 +18,6 @@ These first few lines specify the base `Centos 7` container which will be pulled
 ```sh
 # Install MPICH
 yum -y install mpich mpich-devel
-export PATH=$PATH:/usr/lib64/mpich/bin
 ```
 Installing the `Centos` provided `MPICH` package will serve as a base for building future packages within the container and will later be patched to be compatible with `Cray MPT`.
 
@@ -31,10 +27,6 @@ wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers
 export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
-
-# Set CUDA env variables
-export PATH=$PATH:/usr/local/cuda/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 ```
 The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatible with `CUDA/7.5` and sets up appropriate environment variables.
 
@@ -48,20 +40,12 @@ pip install mpi4py
 With the base container setup we are now free to install packages utilizing MPI and CUDA. Care must be taken to ensure that all packages dependent on `MPI` are built against `MPICH`. For example the prebuilt `Centos` package `python-mpi4py` is built against `OpenMPI` and so must not be used; We can however install `mpi4py` with `pip` to ensure it will be built against the previously installed `MPICH` package.
 
 ```sh
-# Persist PATH and LD_LIBRARY_PATH to container runtime
-echo "" >> /environment
-echo "export PATH=${PATH}" >> /environment
-echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
-```
-Singularity sources the `/environment` file during container runtime, here we ensure that any environment variables required at runtime are persisted.
-
-```sh
 # Patch container to work on Titan
 wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
 sh TitanPrep.sh
 rm TitanPrep.sh
 ```
-Lastly `TitanPrep.sh` is run, setting up appropriate bindpoints and patching the `Centos` provided `MPICH` installation. It's important to note that at this point the container will not function properly on any system but Titan as the `MPICH` libraries have been replaced by symlinks which are only resolvable on Titan.
+`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime.
 
 ## Building the container
 ```bash
@@ -69,6 +53,14 @@ $ sudo singularity create --size 8000 CentosTitan.img
 $ sudo singularity bootstrap CentosTitan.img CentosTitan.def
 ```
 Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
+
+```sh
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
+export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin
+```
+
+Lastly ensure that any environment variables required at runtime are persisted.
 
 ## Transfering the container
 Once the container has been built on a local resource it can be transferred to the OLCF using standard data transfer utilities. Currently Globus Online is the recommended way to facilitate this transfer.
