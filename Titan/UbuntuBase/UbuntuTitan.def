@@ -3,10 +3,6 @@
 BootStrap: docker
 From: ubuntu:zesty
 
-%environment
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
-export PATH=${PATH-}:/usr/local/cuda/bin
-
 %post
 
 # Install basic system software
@@ -39,3 +35,8 @@ pip install mpi4py
 wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
 sh TitanPrep.sh
 rm TitanPrep.sh
+
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
+export PATH=${PATH-}:/usr/local/cuda/bin
+
