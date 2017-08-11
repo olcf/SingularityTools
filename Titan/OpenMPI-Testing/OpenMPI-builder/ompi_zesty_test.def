@@ -1,0 +1,41 @@
+BootStrap: docker
+From: ubuntu:zesty
+IncludeCmd: yes
+
+%setup
+  cp -r build/*.deb ${SINGULARITY_ROOTFS}
+
+%post
+  # Set PATH and LD_LIBRARY_PATH
+  export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
+  export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
+
+  # Supress some messages from apt related to being in a minimal install
+  export DEBIAN_FRONTEND=noninteractive
+
+  apt-get update
+  apt-get install -y wget build-essential libxml2 libxml2-dev libhwloc5 libhwloc-dev libmunge-dev
+
+  cd /
+  # Install all OpenMPI debs
+  dpkg -i --force-all openmpi-common_2.0.2-2_all.deb  
+  dpkg -i --force-all openmpi-bin_2.0.2-2_amd64.deb
+  dpkg -i --force-all libopenmpi2_2.0.2-2_amd64.deb
+  dpkg -i --force-all libopenmpi-dev_2.0.2-2_amd64.deb
+
+  # Install any missing dependencies
+  apt-get install -y -f
+
+  # Runtime OMPI flags needed on Cray
+  echo "export OMPI_MCA_mpi_leave_pinned=0" >> /environment
+  echo "export OMPI_MCA_mpi_leave_pinned_pipeline=0" >> /environment
+
+  # Persist PATH and LD_LIBRARY_PATH to container runtime
+  echo "" >> /environment
+  echo "export PATH=${PATH}" >> /environment
+  echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
+
+  # Patch container to work on Titan
+  wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
+  sh TitanPrep.sh
+  rm TitanPrep.sh

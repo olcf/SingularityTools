@@ -1,0 +1,4 @@
+#!/bin/bash
+
+LD_PRELOAD=/opt/cray/pmi/5.0.11/lib64/libpmi.so.0 ltrace ls
+#LD_PRELOAD=/lustre/atlas1/stf007/world-shared/atj/spack/opt/spack/linux-suse_linux11-x86_64/gcc-5.3.0/openmpi-2.0.2-v5hrdx4rj2bvjvgxt7r7fu5nbq3ssnfw/lib/libmpi.so ls
