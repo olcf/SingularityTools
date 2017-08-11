@@ -3,40 +3,41 @@
 BootStrap: docker
 From: ppc64le/ubuntu:zesty
 
-%post
+# Go into image and modify it
+%setup 
 # Set PATH and LD_LIBRARY_PATH
 export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
 
 # Install basic system software
-apt-get update
-apt-get install -y software-properties-common wget pkg-config
+apt update
+apt install -y software-properties-common wget pkg-config
 apt-add-repository universe
-apt-get update
+apt update
 
 # Install OpenMPI
-apt-get install -y openmpi
+apt install -y openmpi-bin openmpi-common
 
 # Install the toolkit
 wget -O cuda_installer.deb https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda-repo-ubuntu1604-8-0-local-ga2_8.0.54-1_ppc64el-deb
 dpkg -i cuda_installer.deb
-apt-get update
-apt-get -y install cuda-toolkit-8-0
+apt update
+apt -y install cuda-toolkit-8-0
 rm -rf cuda_installer.deb
 
 # Set CUDA env variables
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib:/usr/local/cuda/lib64
 
-# Install GCC compatable with CUDA/8.0
-apt-get install -y gcc-4.9 g++-4.9
+# Install GCC compatible with CUDA/8.0
+apt install -y gcc-4.9 g++-4.9
 
 # Patch CUDA toolkit to work with non system default GCC
 ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
 ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
 # Install mpi4py
-apt-get install -y python-mpi4py
+apt install -y python-mpi4py
 
 # Persist PATH and LD_LIBRARY_PATH to container runtime
 echo "" >> /environment
