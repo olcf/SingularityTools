@@ -15,7 +15,7 @@ mkdir -p .singularity-fixer && cd .singularity-fixer
 
 for dir in "${directories[@]}"; do
   mkdir -p $dir
-  singularity copy $image --parents -r $dir /
+  tar -cp $dir | singularity import $image
 done
 
 cd ..
