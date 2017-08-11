@@ -36,7 +36,7 @@ apt-get install -y gcc-4.9 g++-4.9
 ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
 ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 ```
-The `CUDA Toolkit` can be installed using the `NVIDA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatible with `CUDA/7.5` and sets up appropriate environment variables.
+The `CUDA Toolkit` can be installed using the `NVIDIA` provided installation utility; The driver itself is excluded as it is maintained by the host OS. Care must be taken to ensure that the container makes available compilers which are compatible with `CUDA/7.5` and sets up appropriate environment variables.
 
 ```sh
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
@@ -47,11 +47,11 @@ With the base container setup we are now free to install packages utilizing MPI 
 
 ```sh
 # Patch container to work on Titan
-wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
-sh TitanPrep.sh
-rm TitanPrep.sh
+wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanBootstrap.sh
+sh TitanBootstrap.sh
+rm TitanBootstrap.sh
 ```
-`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime.
+`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime. Alternatively the `TitanPrep.sh` may be run, unprivileged, on the Titan internal login nodes after the container has been built.
 
 ```sh
 %environment

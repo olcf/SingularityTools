@@ -26,9 +26,9 @@ pip install --upgrade pip
 pip install mpi4py
 
 # Patch container to work on Titan
-wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanPrep.sh
-sh TitanPrep.sh
-rm TitanPrep.sh
+wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanBootstrap.sh
+sh TitanBootstrap.sh
+rm TitanBootstrap.sh
 
 %environment
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64

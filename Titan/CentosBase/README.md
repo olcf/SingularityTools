@@ -45,7 +45,7 @@ wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanP
 sh TitanPrep.sh
 rm TitanPrep.sh
 ```
-`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime.
+`TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime. Alternatively the `TitanPrep.sh` may be run, unprivileged, on the Titan internal login nodes after the container has been built.
 
 ## Building the container
 ```bash
