@@ -10,9 +10,9 @@ From: ubuntu:zesty
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
 
 %post
-  apt-add-repository universe
   apt update
   apt-get install -y software-properties-common
+  apt-add-repository universe
   apt update
   apt install -y mpich
   apt install -y build-essential wget curl pkg-config libtool autoconf openjdk-8-jdk g++ zip zlib1g-dev unzip git
@@ -58,6 +58,7 @@ From: ubuntu:zesty
 
   # Set tensorflow configure options
   export PYTHON_BIN_PATH=`which python`
+  export PYTHON_LIB_PATH=/usr/lib/python2.7/dist-packages
   export TF_NEED_MKL=0
   export CC_OPT_FLAGS="-march=native"
   export TF_NEED_JEMALLOC=1
@@ -73,6 +74,7 @@ From: ubuntu:zesty
   export TF_CUDNN_VERSION="5"
   export CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
   export TF_CUDA_COMPUTE_CAPABILITIES="3.5"
+  export TF_NEED_VERBS=1
 
   # Java cert update
   apt-get install ca-certificates-java
@@ -82,7 +84,7 @@ From: ubuntu:zesty
   cd /
   wget https://github.com/tensorflow/tensorflow/archive/v1.2.1.tar.gz -O tensorflow.tar.gz
   tar xf tensorflow.tar.gz
-  mv tensorflow-1.1.0 tensorflow
+  mv tensorflow-1.2.1 tensorflow
   cd tensorflow
   ./configure
 
@@ -96,11 +98,12 @@ From: ubuntu:zesty
   rm -rf /tmp/tensorflow_pkg
 
   # Build/Install Tensorflow against python 3
-  PYTHON_BIN_PATH=`which python3`
+  export PYTHON_BIN_PATH=`which python3`
+  export PYTHON_LIB_PATH=/usr/lib/python3/dist-packages
 
   wget https://github.com/tensorflow/tensorflow/archive/v1.2.1.tar.gz -O tensorflow.tar.gz
   tar xf tensorflow.tar.gz
-  mv tensorflow-1.1.0 tensorflow
+  mv tensorflow-1.2.1 tensorflow
   cd tensorflow
   ./configure
 
