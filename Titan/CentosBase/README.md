@@ -85,4 +85,4 @@ $ aprun -n 2 -N 1 singularity exec CentosTitan.img python HelloMPI.py
 Hello from mpi4py ('Centos', '7', 'zesty') : rank 1 of 2 
 Hello from mpi4py ('Centos', '7', 'zesty') : rank 0 of 2
 ```
-Once the applications have been built they can be executed on compute nodes through `aprun`. Note that the message `WARNING: Not mounting current directory: host does not support PR_SET_NO_NEW_PRIVS` can be ignored and should be removed in the next Singularity release.
+Once the applications have been built they can be executed on compute nodes through `aprun`.
