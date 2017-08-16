@@ -10,6 +10,7 @@ set -x
 
 # Mount point for Cray files
 mkdir -p /opt/cray
+mkdir -p /opt/nvidia
 
 # Mount point for Cray files needed for ALSP runtime
 mkdir -p /var/spool/alps

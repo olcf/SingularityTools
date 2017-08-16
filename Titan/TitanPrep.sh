@@ -2,6 +2,7 @@
 
 image=../$1
 declare -a directories=("opt/cray"
+                        "opt/nvidia"
                         "var/spool/alps"
                         "var/opt/cray"
                         "lustre/atlas"
