@@ -28,6 +28,7 @@ libnvidia-ml.so       : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/lib
 libnvidia-tls.so      : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libnvidia-tls.so.352.101
 libnvidia-wfb.so      : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libnvidia-wfb.so.352.101
 libOpenCL.so          : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libOpenCL.so.1.0.0
+libnvidia-opencl.so   : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libnvidia-opencl.so.352.101
 libOpenGL.so          : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libOpenGL.so
 libvdpau_nvidia.so    : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/libvdpau_nvidia.so.352.101
 nvidia_drv.so         : /opt/cray/nvidia/352.101-1_1.0502.2465.0.0.gem/lib64/nvidia_drv.so
