@@ -9,7 +9,9 @@ declare -a directories=("opt/cray"
                         "lustre/atlas2"
                         "sw"
                         "ccs/sw"
-                        "autofs/nccs-svm1_sw")
+                        "autofs/nccs-svm1_sw"
+                        "/ccs/proj"
+                        "/autofs/nccs-svm1_proj")
 
 mkdir -p .singularity-fixer && cd .singularity-fixer
 

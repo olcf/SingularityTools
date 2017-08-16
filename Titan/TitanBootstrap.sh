@@ -24,3 +24,7 @@ mkdir -p /lustre/atlas2
 mkdir -p /sw
 mkdir -p /ccs/sw
 mkdir -p /autofs/nccs-svm1_sw
+
+# Mount point for proj read-only dirs
+mkdir -p /ccs/proj
+mkdir -p /autofs/nccs-svm1_proj
