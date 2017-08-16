@@ -10,6 +10,13 @@ set appname singularity
 set machine titan
 set version 2.3.1
 
+set hostname [ uname nodename ]
+switch -glob -- $hostname {
+  *-ext* {
+          puts stderr "Singularity is not available on the titan-ext* nodes\nPlease use titan-login* or an interactive/batch job"
+          exit 1}
+}
+
 # Ensure that the correct environment variables are picked up in the container
 # assuming TitanPrep.sh has been run on the image
 
