@@ -30,4 +30,5 @@ mkdir -p /ccs/proj
 mkdir -p /autofs/nccs-svm1_proj
 
 # Create dummy file to bindmount to
-touch /.singularity/env/98-OLCF.sh
+# This file sources OLFC specific environment variables
+touch /.singularity.d/env/98-OLCF.sh

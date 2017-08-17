@@ -20,8 +20,8 @@ for dir in "${directories[@]}"; do
   tar -cp $dir | singularity import $image
 done
 
-mkdir -p .singularity/env
-touch 98-OLCF.sh
-tar -cp .singularity/env/98-OLCF.sh | singularity import $image
+mkdir -p .singularity.d/env
+touch .singularity.d/env/98-OLCF.sh
+tar -cp .singularity.d/env/98-OLCF.sh | singularity import $image
 
 cd .. && rm -rf .singularity-fixer
