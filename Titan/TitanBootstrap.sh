@@ -28,3 +28,6 @@ mkdir -p /autofs/nccs-svm1_sw
 # Mount point for proj read-only dirs
 mkdir -p /ccs/proj
 mkdir -p /autofs/nccs-svm1_proj
+
+# Create dummy file to bindmount to
+touch /.singularity/env/98-OLCF.sh
