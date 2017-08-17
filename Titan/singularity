@@ -1,0 +1,14 @@
+#!/bin/sh --noprofile
+
+# Check if signularity module load
+if [[ -z "${SINGULARITYENV_MODULE_LOADED}" ]]; then
+  echo "Please load the singularity module!"
+  exit 1
+fi
+
+# Ensure that autofs mounts are mounted
+ls /ccs/proj > /dev/null
+ls /sw > /dev/null
+
+# Execute real singularity
+/usr/bin/singularity $@
