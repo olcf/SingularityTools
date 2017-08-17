@@ -10,6 +10,8 @@ set appname singularity
 set machine titan
 set version 2.3.1
 
+module unload xalt
+
 set hostname [ uname nodename ]
 switch -glob -- $hostname {
   *-ext* {
