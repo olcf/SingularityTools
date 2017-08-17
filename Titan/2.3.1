@@ -17,20 +17,6 @@ switch -glob -- $hostname {
           exit 1}
 }
 
-# Ensure that the correct environment variables are picked up in the container
-# assuming TitanPrep.sh has been run on the image
-
-if { [ is-loaded PrgEnv-pgi ] } {
-  module swap PrgEnv-pgi PrgEnv-gnu
-}
-if { [ is-loaded PrgEnv-intel ] } {
-  module swap PrgEnv-intel PrgEnv-gnu
-}
-if { [ is-loaded PrgEnv-cray ] } {
-  module swap PrgEnv-cray PrgEnv-gnu
-}
-module swap gcc gcc/4.9.3
-
 # Unset a few variables within the container
 setenv SINGULARITYENV_PYTHONSTARTUP ""
 setenv SINGULARITYENV_PKG_CONFIG_PATH ""
@@ -43,7 +29,26 @@ setenv SINGULARITYENV_RTLD_SUBSTITUTIONS "/sw/xk6/singularity/rtld.sub"
 setenv PMI_NO_FORK 1
 setenv PMI_NO_PREINITIALIZE 1
 
+# Lets go ahead and autofs /ccs/proj to fix https://github.com/singularityware/singularity/issues/347
+exec ls /ccs/proj > /dev/null
+exec ls /sw > /dev/null
+
 prepend-path PATH /sw/xk6/singularity/bin
+
+# Setup MPI and NVIDIA specific libraries and paths
+set MPICH_LIBDIR [exec readlink -f /opt/cray/mpt/default/gni/mpich-gnu/4.9/lib] 
+set NVIDIA_LIBDIR [exec readlink -f /opt/cray/nvidia/default/lib64]
+set SYSUTILS_LIBDIR [exec readlink -f /opt/cray/sysutils/default/lib64]
+set WLM_LIBDIR [exec readlink -f /opt/cray/wlm_detect/default/lib64]
+set XPMEM_LIBDIR [exec readlink -f /opt/cray/xpmem/default/lib64]
+set UGNI_LIBDIR [exec readlink -f /opt/cray/ugni/default/lib64]
+set UDREG_LIBDIR [exec readlink -f /opt/cray/udreg/default/lib64]
+set PMI_LIBDIR [exec readlink -f /opt/cray/pmi/default/lib64]
+set ALPS_LIBDIR [exec readlink -f /opt/cray/alps/default/lib64]
+
+# These should be sourced from /.singularity/env/98-OLCF.sh which is bind mounted into the container
+setenv OLCF_CONTAINER_LIBRARY_PATH "${MPICH_LIBDIR}:${NVIDIA_LIBDIR}:${SYSUTILS_LIBDIR}:${WLM_LIBDIR}:${XPMEM_LIBDIR}:${UGNI_LIBDIR}:${UDREG_LIBDIR}:${PMI_LIBDIR}:${ALPS_LIBDIR}"
+setenv OLCF_CONTAINER_PATH "${NVIDIA_LIBDIR}/../bin"
 
 setenv SINGULARITYENV_MODULE_LOADED 1
 #
