@@ -33,4 +33,4 @@ The following directories should be created within the container to enable acces
 # Mount point stub file for init script
 /.singularity.d/env/98-OLCF.sh
 ```
-To facilitate this it is recomended that the script `TitanBootstrap.sh` be run in the `%post` section of your container definition. It is also possible to attempt to do this after container creation using the `TitanPrep.sh` file.
+To facilitate this it is recomended that the script `TitanBootstrap.sh` be run in the `%post` section of your container definition. It is also possible to attempt to do this after container creation using the `TitanPrep.sh` script.
