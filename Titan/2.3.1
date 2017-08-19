@@ -12,13 +12,6 @@ set version 2.3.1
 
 module unload xalt
 
-set hostname [ uname nodename ]
-switch -glob -- $hostname {
-  *-ext* {
-          puts stderr "Singularity is not available on the titan-ext* nodes\nPlease use titan-login* or an interactive/batch job"
-          exit 1}
-}
-
 # Unset a few variables within the container
 setenv SINGULARITYENV_PYTHONSTARTUP ""
 setenv SINGULARITYENV_PKG_CONFIG_PATH ""

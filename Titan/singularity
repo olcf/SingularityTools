@@ -1,5 +1,11 @@
 #!/bin/sh --noprofile
 
+# Check to see if we're on an external login node
+if [[ $HOSTNAME == *"titan-ext"* ]]; then
+   echo "Singularity is only available on the titan internal login nodes and interactive/batch jobs"
+   exit 1
+fi
+
 # Check if signularity module load
 if [[ -z "${SINGULARITYENV_MODULE_LOADED}" ]]; then
   echo "Please load the singularity module!"
