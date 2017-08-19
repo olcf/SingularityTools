@@ -5,7 +5,7 @@ From: ppc64le/ubuntu:zesty
 
 %post
   export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/lib/jvm/java-8-openjdk-amd64/bin
-  export LD_LIBRARY_PATH=/usr/local/lib:/lib64/usr/lib/x86_64-linux-gnu
+  export LD_LIBRARY_PATH=/usr/local/lib:/lib64:/lib/powerpc64le-linux-gnu
   export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-ppc64el
 
   apt-get update

@@ -21,7 +21,11 @@ setenv SINGULARITYENV_LD_AUDIT "/sw/summitdev/singularity/lib/libdl-intercept.so
 setenv SINGULARITYENV_RTLD_SUBSTITUTIONS "/sw/summitdev/singularity/rtld.sub"
 
 # Ensure that the correct environment variables are picked up in the container
-setenv OLCF_CONTAINER_LIBRARY_PATH "/sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib"
+# Copies to some MPI libs in /lib64 have been added to /sw/summitdev/singularity/lib so it must be added
+setenv OLCF_CONTAINER_LIBRARY_PATH "/sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib:/sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib/spectrum_mpi:/sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib/pami_port/:/sw/summitdev/singularity/lib"
+
+# I am not sure why this gets blown away by the container but we'll set it manually for now
+setenv SINGULARITYENV_LD_PRELOAD /sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib/libpami_cudahook.so
 
 setenv SINGULARITY_MODULE_LOADED 1
 
