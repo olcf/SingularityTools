@@ -31,10 +31,6 @@ setenv SINGULARITYENV_RTLD_SUBSTITUTIONS "/sw/xk6/singularity/rtld.sub"
 setenv PMI_NO_FORK 1
 setenv PMI_NO_PREINITIALIZE 1
 
-# Lets go ahead and autofs /ccs/proj to fix https://github.com/singularityware/singularity/issues/347
-exec ls /ccs/proj > /dev/null
-exec ls /sw > /dev/null
-
 prepend-path PATH /sw/xk6/singularity/bin
 
 # Setup MPI and NVIDIA specific libraries and paths
