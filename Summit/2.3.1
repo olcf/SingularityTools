@@ -1,0 +1,31 @@
+#%Module
+# singularity
+
+proc ModulesHelp { } {
+   puts stderr "Provide a user environment suitable for running Singularity containers"
+}
+module-whatis "Provide a user environment suitable for running Singularity containers"
+
+set appname singularity
+set machine summit
+set version 2.3.1
+
+module unload xalt
+
+# Unset a few variables within the container
+setenv SINGULARITYENV_PYTHONSTARTUP ""
+setenv SINGULARITYENV_PKG_CONFIG_PATH ""
+
+# Inject Spectrum MPI libs using dl_intercept
+setenv SINGULARITYENV_LD_AUDIT "/sw/summitdev/singularity/lib/libdl-intercept.so"
+setenv SINGULARITYENV_RTLD_SUBSTITUTIONS "/sw/summitdev/singularity/rtld.sub"
+
+# Ensure that the correct environment variables are picked up in the container
+setenv OLCF_CONTAINER_LIBRARY_PATH "/sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib"
+
+setenv SINGULARITY_MODULE_LOADED 1
+
+#
+##-- end
+#
+

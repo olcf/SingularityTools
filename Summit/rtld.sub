@@ -1,0 +1,1 @@
+libmpi.so : /sw/summitdev/spectrum_mpi/10.1.0.2-20161221c/gcc-4.8.5/lib/libmpi_ibm.so.2
