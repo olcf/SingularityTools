@@ -1,0 +1,32 @@
+#%Module
+# singularity
+
+proc ModulesHelp { } {
+   puts stderr "Provide a user environment suitable for running Singularity containers"
+}
+module-whatis "Provide a user environment suitable for running Singularity containers"
+
+set appname singularity
+set machine titan
+set version 2.3.1
+
+module unload xalt
+
+# Unset a few variables within the container
+setenv SINGULARITYENV_PYTHONSTARTUP ""
+setenv SINGULARITYENV_PKG_CONFIG_PATH ""
+
+prepend-path PATH /sw/xk6/singularity/bin
+
+# Setup MPI and NVIDIA specific libraries and paths
+set NVIDIA_LIBDIR [exec readlink -f /opt/cray/nvidia/default/lib64]
+
+# These should be sourced from /.singularity/env/98-OLCF.sh which is bind mounted into the container
+setenv OLCF_CONTAINER_LIBRARY_PATH "${NVIDIA_LIBDIR}"
+setenv OLCF_CONTAINER_PATH "${NVIDIA_LIBDIR}/../bin"
+
+setenv SINGULARITYENV_MODULE_LOADED 1
+#
+##-- end
+#
+
