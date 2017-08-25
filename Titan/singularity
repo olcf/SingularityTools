@@ -7,7 +7,7 @@ if [[ $HOSTNAME == *"titan-ext"* ]]; then
 fi
 
 # Check if signularity module load
-if [[ -z "${SINGULARITYENV_MODULE_LOADED}" ]]; then
+if [[ -z "${SINGULARITY_MODULE_LOADED}" ]]; then
   echo "Please load the singularity module!"
   exit 1
 fi
