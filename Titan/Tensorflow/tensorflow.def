@@ -92,13 +92,11 @@ From: ubuntu:zesty
   git config --global user.email "help@olcf.ornl.gov"
   git config --global user.name "OLCF"
 
-  # Build/Install Tensorflow against python 3
+  # Build/Install Tensorflow against python 2
   cd /
   git clone https://github.com/tensorflow/tensorflow.git
   cd tensorflow
-  git checkout tags/v1.3.0-rc2
-  # Chery pick fix for bazel 0.5.3
-  git cherry-pick c5d311eaf8cc6471643b5c43810a1feb19662d6c 
+  git checkout tags/v1.3.0
   ./configure
 
   bazel build -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
@@ -116,9 +114,7 @@ From: ubuntu:zesty
 
   git clone https://github.com/tensorflow/tensorflow.git
   cd tensorflow
-  git checkout tags/v1.3.0-rc2
-  # Chery pick fix for bazel 0.5.3
-  git cherry-pick c5d311eaf8cc6471643b5c43810a1feb19662d6c
+  git checkout tags/v1.3.0
   ./configure 
 
   bazel build -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
@@ -145,6 +141,10 @@ From: ubuntu:zesty
   # GCC/4.8 is too old to acept the compile flags required by mpi4py
   pip install mpi4py
   pip3 install mpi4py
+
+  # Install a few plotting libraries
+  pip install matplotlib
+  pip3 install matplotlib
 
   # Patch container to work on Titan
   wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanBootstrap.sh
