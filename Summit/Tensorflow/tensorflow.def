@@ -3,11 +3,12 @@
 BootStrap: docker
 From: ppc64le/ubuntu:zesty
 
-%post
-  export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/lib/jvm/java-8-openjdk-amd64/bin
-  export LD_LIBRARY_PATH=/usr/local/lib:/lib64:/lib/powerpc64le-linux-gnu
+%environment
+  export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/lib/jvm/java-8-openjdk-ppc64el/bin
+  export LD_LIBRARY_PATH=/usr/local/lib:/lib64:/lib/powerpc64le-linux-gnu:/usr/lib/powerpc64le-linux-gnu
   export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-ppc64el
 
+%post
   apt-get update
   apt-get install -y software-properties-common
   apt-add-repository universe
@@ -114,19 +115,21 @@ From: ppc64le/ubuntu:zesty
   export CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
   export TF_CUDA_COMPUTE_CAPABILITIES="6.0"
   export TF_NEED_VERBS=0
-  export TF_NEED_MPI=1
-  export MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi
+
+  # TENSORFLOW MPI support is currently pretty bad and doesnt pick up the correct libraries
+  export TF_NEED_MPI=0
+#  export MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi
 
   # Tensorflow has horrible MPI support in ./configure...
-  ln -s /usr/include/mpi/mpi.h /usr/include/mpi.h
-  ln -s /usr/include/mpi/mpio.h /usr/include/mpio.h
-  ln -s /usr/include/mpi/mpicxx.h /usr/include/mpicxx.h
+#  ln -s /usr/include/mpi/mpi.h /usr/include/mpi.h
+#  ln -s /usr/include/mpi/mpio.h /usr/include/mpio.h
+#  ln -s /usr/include/mpi/mpicxx.h /usr/include/mpicxx.h
 
   # Java cert update
   apt-get install ca-certificates-java
   update-ca-certificates -f
 
-  # Build/Install Tensorflow against python 3
+  # Build/Install Tensorflow against python 2
   cd /
   wget https://github.com/tensorflow/tensorflow/archive/v1.3.0.tar.gz -O tensorflow.tar.gz
   tar xf tensorflow.tar.gz
@@ -172,10 +175,8 @@ From: ppc64le/ubuntu:zesty
   apt-get install -y python-theano
   apt-get install -y python3-theano
 
-  # Persist environment variables
-  echo "" >> /environment
-  echo "export PATH=${PATH}" >> /environment
-  echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> /environment
+  apt-get install -y python-matplotlib
+  apt-get install -y python3-matplotlib
 
   # Make sure bazel is shutdown so it doesn't stop singularity from cleanly exiting
   bazel shutdown
