@@ -1,0 +1,19 @@
+#%Module
+# tensorflow
+
+proc ModulesHelp { } {
+   puts stderr "Provide GPU enabled tensorflow/1.3.0 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+}
+module-whatis "Provide GPU enabled tensorflow/1.3.0 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+
+set appname tensorflow
+set machine titan
+set version 1.3.0
+
+module load singularity
+setenv TENSORFLOW_CONTAINER /autofs/nccs-svm1_sw/titan/tensorflow/tensorflow_x86.img
+
+#
+##-- end
+#
+
