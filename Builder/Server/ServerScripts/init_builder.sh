@@ -3,10 +3,9 @@
 cd /home/cades
 
 # Fetch server init scripts
-git clone gitlab@gitlab.ccs.ornl.gov:frenchrd/container-factory.git
-git checkout -b Docker
+git clone https://github.com/olcf/SingularityTools.git
 
-SCRIPT_DIR=/home/cades/container-factory/BuilderServer/ServerSideInit
+SCRIPTS_DIR=/home/cades/SingularityTools/Builder/Server/ServerScripts
 
 # Install docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -15,7 +14,7 @@ sudo apt-get update
 sudo apt-get install -y docker-ce
 
 # Enable apparmor profile
-sudo apparmor_parser -r -W ${SCRIPT_DIR}/apparmour.builder
+sudo apparmor_parser -r -W ${SCRIPTS_DIR}/apparmour.builder
 
 # Create builder user whichout shell access
 echo "/usr/sbin/nologin" >> /etc/shells
@@ -41,7 +40,7 @@ done
 touch /home/builder/BuildQueue
 
 # Create singularity builder docker image
-sudo docker build -t singularity_builder -f ${SCRIPT_DIR}/Dockerfile  .
+sudo docker build -t singularity_builder -f ${SCRIPTS_DIR}/Dockerfile  .
 
 # Create builder scratch work directory
 mkdir /home/builder/container_scratch
@@ -59,18 +58,18 @@ cd boost_1_65_1
 sudo ./b2 install
 
 BUILDER_IP=$(ifconfig ens3 | awk '/inet addr/ {gsub("addr:", "", $2); print $2}')
-cd /home/cades/container-factory/BuilderServer/SSH_Sanitizer
+cd ${SCRIPTS_DIR}/../SSH_Sanitizer
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" -DBUILDER_IP="\"${BUILDER_IP}\"" ..
 make
 make install
 
 # Install SingularityBuilder
-cp ${SCRIPT_DIR}/SingularityBuilder /usr/local/bin
+cp ${SCRIPTS_DIR}/SingularityBuilder /usr/local/bin
 
 # Add security options to lock down builder user SSH capabilities
 SSH_KEY_OPTS='command="/usr/local/SSH_Sanitizer",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty '
 sudo sh -c "cat -n ${SSH_KEY_OPTS} > /home/builder/.ssh/authorized_keys"
 
 # Add newly created key to builders authorized_keys
-sudo sh -c "cat /home/cades/builder_key.pub >> /home/builder/.ssh/authorized_keys"
+sudo sh -c "cat /home/cades/BuilderKey.pub >> /home/builder/.ssh/authorized_keys"
