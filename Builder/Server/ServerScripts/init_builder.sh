@@ -17,8 +17,7 @@ sudo apt-get install -y docker-ce
 sudo apparmor_parser -r -W ${SCRIPTS_DIR}/apparmour.builder
 
 # Create builder user whichout shell access
-echo "/usr/sbin/nologin" >> /etc/shells
-sudo useradd --create-home --home-dir /home/builder --shell /usr/sbin/nologin builder
+sudo useradd --create-home --home-dir /home/builder --shell /bin/bash builder
 
 # Allow builder user to run docker as sudo by adding to docker group
 sudo gpasswd -a builder docker
