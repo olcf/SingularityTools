@@ -138,12 +138,12 @@ namespace {
     if(split_command[1] == "-t") {
       builder_prep();
       std::string scp_call{gScpBase;
-      scp_call += " -t " + unique_work_path() + "/container.def"
+      scp_call += " -t " + unique_work_path() + "/container.def";
       err = blocking_exec(scp_call);
     } 
     else if(split_command[1] == "-f") {
       std::string scp_call{gScpBase};
-      scp_call += " -f " + unique_work_path() + "/container.img"
+      scp_call += " -f " + unique_work_path() + "/container.img";
       err = blocking_exec(scp_call);
     }
     else {
