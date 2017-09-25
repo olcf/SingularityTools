@@ -1,0 +1,7 @@
+.venv/*
+*.swp
+*.pyc
+.cache/*
+secure.yaml
+launch_wrapper/build/*
+dummy.txt

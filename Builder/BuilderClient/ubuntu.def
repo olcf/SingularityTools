@@ -1,0 +1,13 @@
+BootStrap: docker
+From: ubuntu:zesty
+
+%post
+apt-get update
+apt-get install -y software-properties-common wget pkg-config
+apt-add-repository universe
+apt-get update
+apt-get install -y python python3
+
+# Install MPICH
+apt-get install -y mpich
+apt-get install -y gcc-4.9 g++-4.9
