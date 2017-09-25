@@ -47,6 +47,7 @@ mkdir /home/builder/container_scratch
 
 # Create SSH key for builder
 ssh-keygen -f /home/cades/BuilderKey
+sudo chown cades /home/cades/BuilderKey
 
 # Build the the Command Sanitizer application, providing it the builder IP
 # This requires a recent version of boost and so we
@@ -62,7 +63,7 @@ cd ${SCRIPTS_DIR}/../SSH_Sanitizer
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" -DBUILDER_IP="\"${BUILDER_IP}\"" ..
 make
-make install
+sudo make install
 
 # Install SingularityBuilder
 cp ${SCRIPTS_DIR}/SingularityBuilder /usr/local/bin
