@@ -7,8 +7,9 @@ SCRIPT_DIR=$(dirname $0)
 source ${SCRIPT_DIR}/openrc.sh
 
 # Remove Key
-nova keypair-delete ContainerBuilderKey
-rm ${SCRIPT_DIR}/ContainerBuilderKey
+nova keypair-delete CadesKey
+rm ${SCRIPT_DIR}/CadesKey
+rm ${SCRIPT_DIR}/BuilderKey
 
 # Remove IP file
 rm ${SCRIPT_DIR}/ContainerBuilderIP

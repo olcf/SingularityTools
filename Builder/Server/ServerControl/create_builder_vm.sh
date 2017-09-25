@@ -16,7 +16,7 @@ NIC="or_provider_general_extnetwork1"
 source ./openrc.sh
 
 # Create Keys for cades user
-KEY="ContainerBuilderKey"
+KEY="CadesKey"
 KEY_FILE="${SCRIPT_DIR}/${KEY}"
 
 nova keypair-add ${KEY} > ${KEY_FILE}
@@ -59,5 +59,9 @@ done
 VM_IP=`nova show ${VM_UUID} | grep or_provider_general_extnetwork1 | awk '{print $5}'`
 
 rm -rf ContainerBuilderIP
-echo $VM_IP > ${SCRIPT_DIR}/ContainerBuilderIP 
+echo $VM_IP > ${SCRIPT_DIR}/ContainerBuilderIP
+
+# Retrieve private key for builder
+scp -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey .
+
 echo "Started ${VM_UUID} with external IP ${VM_IP} using ${KEY_FILE}"
