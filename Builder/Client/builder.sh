@@ -14,19 +14,19 @@ DEF_BASENAME="$(basename $2)"
 CONTAINER_SIZE=$3
 
 # Builder details
-export VM_IP="1.2.3.4.5"
-export KEY_FILE="ContainerBuilderKey"
+export VM_IP="128.219.187.220"
+export KEY_FILE="./BuilderKey"
 
 # Socket file used for SSH control master on the host
 CONTROL_SOCKET='/tmp/.controlmaster-%u-%r@%h:%p'
 
 # Setup a control master socket so that all commands utilize the same connection
 # This allows us to ensure that all subsuquent operations originate from the same user/session
-/usr/bin/ssh -N -oControlMaster=yes -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE}, -oStrictHostKeyChecking=no builder@${VM_IP} &
+/usr/bin/ssh -N -oControlMaster=yes -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} &
 CONTROL_MASTER_PID=$!
 
 # Obtain the value of SSH_CONNECTION on the remote machine
-WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE}, -oStrictHostKeyChecking=no builder@${VM_IP} 'GetWorkPath')
+WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'GetWorkPath')
 
 # On abnormal exit kill control master process
 # Not all shells call EXIT on SIGHUP/INT/TERM
