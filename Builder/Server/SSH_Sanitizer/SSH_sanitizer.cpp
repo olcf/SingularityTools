@@ -137,7 +137,7 @@ namespace {
     int err;
     if(split_command[1] == "-t") {
       builder_prep();
-      std::string scp_call{gScpBase;
+      std::string scp_call{gScpBase};
       scp_call += " -t " + unique_work_path() + "/container.def";
       err = blocking_exec(scp_call);
     } 
