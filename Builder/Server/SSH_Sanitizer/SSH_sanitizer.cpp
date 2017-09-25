@@ -15,8 +15,8 @@
 
 // The following commands are allowed:
 // /usr/local/bin/SingularityBuilder container_size
-// /usr/bin/scp -t local/file cades@{BUILDER_IP}:{BUILDER_PATH}/file
-// /usr/bin/scp -t cades@{BUILDER_IP}:{BUILDER_PATH}/file local/file
+// /usr/bin/scp -t unique_work_path()/container.def
+// /usr/bin/scp -f unique_work_path()/container.img
 // GetWorkPath
 
 // File namespace(static)
@@ -124,47 +124,31 @@ namespace {
     return err;
   }
 
-  // We allow exactly two scp cases
-  // scp /arbitrary/file.def builder@{builder_IP}:unique_work_path()/container.def
-  // scp builder@{builder_IP}:unique_work_path()/container.img /arbitrary/file.img
+  // We allow exactly two scp cases, the command passed to SSH_ORIGINAL_COMMAND is NOT the same is is run on the client
+  // /usr/bin/scp -t unique_work_path()/container.def
+  // /usr/bin/scp -f unique_work_path()/container.img
   // Upon transfering the definition we create the unique directory and upon transfering the final image we delete it 
   int run_scp(const std::vector<std::string>& split_command) {
     // Check number of arguments
-    if(split_command.size() != 4) {
+    if(split_command.size() != 3) {
       throw std::system_error(EINVAL, std::generic_category(), "scp");
     }
 
-    // Check for "-t" flag, this is a hidden flag present on the remote end of the SCP call
-    if(split_command[1] != "-t") {
-      throw std::system_error(EINVAL, std::generic_category(), "scp: -t");
-    }
-
-    const std::string& source = split_command[2];
-    const std::string& destination = split_command[3];
-
-    // Generate allowable builder targets
-    std::string definition_target;
-    definition_target += "builder@" + builder_ip() + ":" + unique_work_path() + "/container.def";
-    std::string container_target;
-    container_target += "builder@" + builder_ip() + ":" + unique_work_path() + "/container.img";
-
-    std::string scp_call{gScpBase};
-    scp_call += " -t " + source + " " + destination;
-
     int err;
-    // Check for allowed cases
-    if(destination == definition_target && source.find(":") == std::string::npos) {
+    if(split_command[1] == "-t") {
       builder_prep();
+      std::string scp_call{gScpBase;
+      scp_call += " -t " + unique_work_path() + "/container.def";
       err = blocking_exec(scp_call);
     } 
-    else if(source == container_target && destination.find(":") == std::string::npos) {
+    else if(split_command[1] == "-f") {
+      std::string scp_call{gScpBase};
+      scp_call += " -f " + unique_work_path() + "/container.img";
       err = blocking_exec(scp_call);
-      builder_cleanup();
-    } 
+    }
     else {
       throw std::system_error(EINVAL, std::generic_category(), "scp");
     }
-
     return err;
   }
 
