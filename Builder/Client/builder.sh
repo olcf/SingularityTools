@@ -36,10 +36,18 @@ export CONTROL_SOCKET='~/.ssh/ControlSocket-%l%h%p%r'
 # Obtain the value of SSH_CONNECTION on the remote machine
 WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'GetWorkPath')
 
+# Prepare the remote side to receive builder
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderPrep'
+
 # Copy definition file
 # WORK_PATH will be created on behalf of this command and the build process kicked off
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no ${DEF_PATH} builder@${VM_IP}:${WORK_PATH}/container.def
 
+# Run the build process
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderRun'
+
 # Copy container file back
 # WORK_PATH will be automatically deleted after this operation
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.name ${NAME_PATH}
+
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderCleanup'
