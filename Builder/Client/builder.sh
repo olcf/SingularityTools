@@ -8,21 +8,18 @@ fi
 # On exit kill control master process
 # Not all shells call EXIT on SIGHUP/INT/TERM so we trap them
 # Once we've trapped once ignore further abnormal traps(hitting ctrl-c a bunch)
-#function null_cleanup {
-#  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
-#}
-#function cleanup {
-#  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
-#  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
-#  exit
-#}
-#trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
+function null_cleanup {
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+}
+function cleanup {
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
+  exit
+}
+trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
 
 IMG_PATH="$1"
-IMG_BASENAME="$(basename $1)"
 DEF_PATH="$2"
-DEF_BASENAME="$(basename $2)"
-CONTAINER_SIZE=$3
 
 # Builder details
 export VM_IP="128.219.187.226"
@@ -44,8 +41,8 @@ WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictH
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no ${DEF_PATH} builder@${VM_IP}:${WORK_PATH}/container.def
 
 # Build singularity container in docker
-/usr/bin/ssh -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} /usr/local/bin/SingularityBuilder $CONTAINER_SIZE
+/usr/bin/ssh -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} /usr/local/bin/SingularityBuilder
 
 # Copy container file back
 # WORK_PATH will be automatically deleted after this operation
-/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.img ${IMG_PATH}
+/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.name ${IMG_PATH}
