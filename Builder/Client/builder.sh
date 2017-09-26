@@ -8,15 +8,15 @@ fi
 # On exit kill control master process
 # Not all shells call EXIT on SIGHUP/INT/TERM so we trap them
 # Once we've trapped once ignore further abnormal traps(hitting ctrl-c a bunch)
-function null_cleanup {
-  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
-}
-function cleanup {
-  trap null_cleanup HUP INT TERM PIPE QUIT ABRT EXIT
-  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
-  exit
-}
-trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
+#function null_cleanup {
+#  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+#}
+#function cleanup {
+#  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+#  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
+#  exit
+#}
+#trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
 
 IMG_PATH="$1"
 IMG_BASENAME="$(basename $1)"

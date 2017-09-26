@@ -36,9 +36,7 @@ namespace {
   int blocking_exec(std::string command) {
     namespace bp = boost::process;
 
-    bp::group child_group; // Allow child processes of command to be terminated
     bp::environment env;   // Blank environment env
-
     int return_code;
 
     // Launch the command asynchronously
@@ -47,7 +45,8 @@ namespace {
     // This can be set by signal handlers
     while(child_proc.running()) {
       if(gShouldKill) {
-        child_group.terminate();
+        pid_t pid = child_group.id();
+        kill(pid, SIGINT);
       }
     }
 
