@@ -5,19 +5,15 @@ if [ $# -ne 3 ]; then
   exit 1
 fi
 
-# On abnormal exit kill control master process
-# Not all shells call EXIT on SIGHUP/INT/TERM,etc.
+# On exit kill control master process
+# Not all shells call EXIT on SIGHUP/INT/TERM so we trap them
+# Once we've trapped once ignore further abnormal traps(hitting ctrl-c a bunch)
+function null_cleanup {
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+}
 function cleanup {
-  trap cleanup HUP INT TERM PIPE QUIT ABRT
-  echo "Error: Aborting"
-  if [ -n "${CONTROL_MASTER_PID}" ]; then
-    kill -9 ${CONTROL_MASTER_PID}
-    unset CONTROL_MASTER_PID
-  fi
-  if [ -n "${CONTROL_SOCKET_DIR}" ]; then
-    rm -r ${CONTROL_SOCKET_DIR}
-    unset CONTROL_SOCKET_DIR
-  fi
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT EXIT
+  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
   exit
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
@@ -33,13 +29,12 @@ export VM_IP="128.219.187.226"
 export KEY_FILE="./BuilderKey"
 
 # Socket file used for SSH control master on the host
-export CONTROL_SOCKET_DIR=$(mktemp -d "/tmp/control_master.XXXXXX")
-export CONTROL_SOCKET="${CONTROL_SOCKET_DIR}/control_socket"
+export CONTROL_SOCKET='~/.ssh/ControlSocket-%l%h%p%r'
 
 # Setup a control master socket so that all commands utilize the same connection
 # This allows us to ensure that all subsuquent operations originate from the same user/session
+# https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing
 /usr/bin/ssh -f -N -M -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
-CONTROL_MASTER_PID=$!
 
 # Obtain the value of SSH_CONNECTION on the remote machine
 WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'GetWorkPath')
@@ -49,13 +44,8 @@ WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictH
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no ${DEF_PATH} builder@${VM_IP}:${WORK_PATH}/container.def
 
 # Build singularity container in docker
-/usr/bin/ssh -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} "/usr/local/bin/SingularityBuilder $CONTAINER_SIZE"
+/usr/bin/ssh -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} /usr/local/bin/SingularityBuilder $CONTAINER_SIZE
 
 # Copy container file back
 # WORK_PATH will be automatically deleted after this operation
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.img ${IMG_PATH}
-
-# Cleanup
-kill -9 ${CONTROL_MASTER_PID}
-rm -r ${CONTROL_SOCKET_DIR}
-
