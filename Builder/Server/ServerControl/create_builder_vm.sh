@@ -59,7 +59,7 @@ done
 VM_IP=`nova show ${VM_UUID} | grep or_provider_general_extnetwork1 | awk '{print $5}'`
 
 rm -rf ContainerBuilderIP
-echo $VM_IP > ${SCRIPT_DIR}/ContainerBuilderIP
+echo $VM_IP > ${SCRIPTS_DIR}/BuilderIP
 
 # Retrieve private key for builder
 scp -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
