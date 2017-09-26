@@ -1,80 +1,80 @@
-  #!/bin/bash
+#!/bin/bash
   
-  set -e
+set -e
 
-  CONTAINER_SIZE=$1
-  UNIQUE_ID=$2
-  TMP_WORK_DIR=$3
+CONTAINER_SIZE=$1
+UNIQUE_ID=$2
+TMP_WORK_DIR=$3
 
-  export LOOP_ID=""
-  export LOOP_FILE="/home/cades/AvailableLoopDevices"
-  export LOOP_LOCK="/tmp/ContainerBuilder.lock"
-  export QUEUE_FILE="/home/cades/BuildQueue"
+export LOOP_ID=""
+export LOOP_FILE="/home/builder/AvailableLoopDevices"
+export LOOP_LOCK="/tmp/ContainerBuilder.lock"
+export QUEUE_FILE="/home/builder/BuildQueue"
 
-  # Handle both normal and abnormal exit
-  function cleanup {
-    trap '' EXIT HUP INT TERM PIPE QUIT ABRT
-    # Make loop device available, if reserved
-    { flock 200
-       if [ -n "${LOOP_ID}" ]; then 
-         echo ${LOOP_ID} >> ${LOOP_FILE}
-         unset LOOP_ID
-       fi
-    } 200>${LOOP_LOCK}
-
-    # Remove UUID from queue file, if queued
-    { flock 200
-      if [ -n "${UNIQUE_ID}" ]; then
-        sed --in-place "/\<${UNIQUE_ID}\>/d" ${QUEUE_FILE}
-        unset UNIQUE_ID
-      fi
-    } 200>${LOOP_LOCK}
-  }
-  trap cleanup EXIT HUP INT TERM PIPE QUIT ABRT
-
-  # Check for available loop device or add UNIQUE_ID to build queue
+# Handle both normal and abnormal exit
+function cleanup {
+  trap '' EXIT HUP INT TERM PIPE QUIT ABRT
+  # Make loop device available, if reserved
   { flock 200
-      # Check for an available loop device
-      LOOP_ID=$(head -n 1 $LOOP_FILE)
-      sed -i '1d' ${LOOP_FILE}
+     if [ -n "${LOOP_ID}" ]; then 
+       echo ${LOOP_ID} >> ${LOOP_FILE}
+       unset LOOP_ID
+     fi
+  } 200>${LOOP_LOCK}
 
-      # If spot not available append UNIQUE_ID to build queue file
-      if [ -z ${LOOP_ID} ]; then
-        echo $UNIQUE_ID >> /home/cades/BuildQueue
+  # Remove UUID from queue file, if queued
+  { flock 200
+    if [ -n "${UNIQUE_ID}" ]; then
+      sed --in-place "/\<${UNIQUE_ID}\>/d" ${QUEUE_FILE}
+      unset UNIQUE_ID
+    fi
+  } 200>${LOOP_LOCK}
+}
+trap cleanup EXIT HUP INT TERM PIPE QUIT ABRT
+
+# Check for available loop device or add UNIQUE_ID to build queue
+{ flock 200
+    # Check for an available loop device
+    LOOP_ID=$(head -n 1 $LOOP_FILE)
+    sed -i '1d' ${LOOP_FILE}
+
+    # If spot not available append UNIQUE_ID to build queue file
+    if [ -z ${LOOP_ID} ]; then
+      echo $UNIQUE_ID >> /home/builder/BuildQueue
+    fi
+} 200>${LOOP_LOCK}
+
+# Spinner characters
+chars="/-\|"
+
+# Wait in the build queue for an available loop device
+while [ -z ${LOOP_ID} ]; do
+  { flock 200
+      # If we're the next build check for an available device
+      if [ "$(head -n 1 $QUEUE_FILE)" == "${UNIQUE_ID}" ]; then
+        LOOP_ID=$(head -n 1 $LOOP_FILE)
+        sed -i '1d' $LOOP_FILE
+
+        # If we now have a LOOP_ID remove the UNIQUE from queue
+        if [ -n "${LOOP_ID}" ]; then
+          sed -i '1d' ${QUEUE_FILE}
+        fi
       fi
   } 200>${LOOP_LOCK}
 
-  # Spinner characters
-  chars="/-\|"
-
-  # Wait in the build queue for an available loop device
-  while [ -z ${LOOP_ID} ]; do
-    { flock 200
-        # If we're the next build check for an available device
-        if [ "$(head -n 1 $QUEUE_FILE)" == "${UNIQUE_ID}" ]; then
-          LOOP_ID=$(head -n 1 $LOOP_FILE)
-          sed -i '1d' $LOOP_FILE
-
-          # If we now have a LOOP_ID remove the UNIQUE from queue
-          if [ -n "${LOOP_ID}" ]; then
-            sed -i '1d' ${QUEUE_FILE}
-          fi
-        fi
-    } 200>${LOOP_LOCK}
-
-    # Print spinner animation
-    for i in $(seq 0 2); do
-      sleep 0.1
-      echo -en "Waiting on resources ${chars:$i:1}" "\r"
-    done
-
-    sleep 1
+  # Print spinner animation
+  for i in $(seq 0 2); do
+    sleep 0.1
+    echo -en "Waiting on resources ${chars:$i:1}" "\r"
   done
 
-  LOOP_DEVICE="/dev/loop${LOOP_ID}"
+  sleep 1
+done
 
-  # Build container
-  cd ${TMP_WORK_DIR}
-  docker run -it --device=${LOOP_DEVICE} --cap-add SYS_ADMIN --cap-add SYS_CHROOT -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity create --size ${CONTAINER_SIZE} ./container.name
-  docker run -it --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity bootstrap ./container.name ./container.def
+LOOP_DEVICE="/dev/loop${LOOP_ID}"
+
+# Build container
+cd ${TMP_WORK_DIR}
+docker run -it --device=${LOOP_DEVICE} --cap-add SYS_ADMIN --cap-add SYS_CHROOT -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity create --size ${CONTAINER_SIZE} ./container.name
+docker run -it --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity bootstrap ./container.name ./container.def
 
