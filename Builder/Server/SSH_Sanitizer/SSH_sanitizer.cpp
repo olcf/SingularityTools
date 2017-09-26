@@ -15,8 +15,14 @@
 
 // The following commands are allowed:
 // scp -t unique_work_path()/container.def
-// scp -f unique_work_path()/container.img
+// scp -f unique_work_path()/container.name
 // GetWorkPath
+// BuilderPrep
+// BuilderRun
+// BuilderCleanup
+
+// Note that SCP is a two way command and once it's finished on the initiating side it will return
+// So we can't get fancy and have the SCP call do the prep/build/cleanup
 
 // File namespace(static)
 namespace {
@@ -24,6 +30,9 @@ namespace {
   constexpr auto gScpBase = "scp";
   constexpr auto gBuilderDirectoryPath = "/home/builder/container_scratch/";
   constexpr auto gGetWorkPath = "GetWorkPath";
+  constexpr auto gBuilderPrep = "BuilderPrep";
+  constexpr auto gBuilderRun = "BuilderRun";
+  constexpr auto gBuilderCleanup = "BuilderCleanup";
 
   volatile std::sig_atomic_t gShouldKill = 0;
 
@@ -115,27 +124,19 @@ namespace {
 
     int err;
     if(split_command[1] == "-t") {
-      // Initialize work area
-      builder_prep();
-
       // Initiate SCP
       std::string scp_call{gScpBase};
       scp_call += " -t " + unique_work_path() + "/container.def";
       err = blocking_exec(scp_call);
+      std::cout<<"scp err: "<<err<<std::endl;
       if(err)
         return err;
-     
-      // Kick off builder
-      err = builder_run();
     } 
     else if(split_command[1] == "-f") {
       // Initiate SCP
       std::string scp_call{gScpBase};
       scp_call += " -f " + unique_work_path() + "/container.img";
       err = blocking_exec(scp_call);
- 
-      // Cleanup work area
-      builder_cleanup();
     }
     else {
       throw std::system_error(EINVAL, std::generic_category(), "scp");
@@ -187,6 +188,17 @@ int main(int argc, char** argv) {
     }
     else if(split_command[0] == gGetWorkPath) {
       std::cout<<unique_work_path()<<std::endl;
+      err = 0;
+    }
+    else if(split_command[0] == gBuilderPrep) {
+      builder_prep();
+      err = 0;
+    }
+    else if(split_command[0] == gBuilderRun) {
+      return builder_run();
+    }
+    else if(split_command[0] == gBuilderCleanup) {
+      builder_cleanup();
       err = 0;
     }
     else {

@@ -7,4 +7,4 @@ RUN cd singularity && ./autogen.sh && ./configure --prefix=/usr/local && make &&
 RUN mkdir /work_dir
 
 # This form is required so that singularity is not run directly and not in a shell so signals can be sent to it
-CMD ["singularity", "build", "container.name", "contianer.def"]
+CMD ["singularity", "build", "./container.img", "./container.def"]
