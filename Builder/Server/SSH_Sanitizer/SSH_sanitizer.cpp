@@ -14,7 +14,6 @@
 // the SSH_CONNECTION info is used as a unique identifier to ensure users only have very limited access
 
 // The following commands are allowed:
-// /usr/local/bin/SingularityBuilder container_size
 // scp -t unique_work_path()/container.def
 // scp -f unique_work_path()/container.img
 // GetWorkPath
@@ -86,27 +85,22 @@ namespace {
     boost::filesystem::create_directories(unique_work_path());
   }
 
-  void builder_cleanup() {
-    boost::filesystem::remove_all(unique_work_path());
-  }
-
-
-  int run_SingularityBuilder(const std::vector<std::string>& split_command) {
-    if(split_command.size() != 2) {
-      throw std::system_error(EINVAL, std::generic_category(), "SingularityBuilder");
-    }
-    const std::string& container_size = split_command[1];
-
+  int builder_run() {
     std::string builder_call{gBuilderBase};
-    builder_call += " " + container_size + " " + unique_work_path() + " " + unique_work_path();        
+    builder_call += " " + unique_work_path() + " " + unique_work_path();
     int err = blocking_exec(builder_call);
     return err;
+  }
+
+  void builder_cleanup() {
+    boost::filesystem::remove_all(unique_work_path());
   }
 
   // We allow exactly two scp cases, the command passed to SSH_ORIGINAL_COMMAND is NOT the same is is run on the client
   // scp -t unique_work_path()/container.def
   // scp -f unique_work_path()/container.img
-  // Upon transfering the definition we create the unique directory and upon transfering the final image we delete it 
+  // Upon transfering the definition to the builder we create the unique directory and kick off the build process
+  // Upon transfering the final image to the client we delete the unique work directory o nthe builder 
   int run_scp(const std::vector<std::string>& split_command) {
     // Check number of arguments
     if(split_command.size() != 3) {
@@ -115,15 +109,27 @@ namespace {
 
     int err;
     if(split_command[1] == "-t") {
+      // Initialize work area
       builder_prep();
+
+      // Initiate SCP
       std::string scp_call{gScpBase};
       scp_call += " -t " + unique_work_path() + "/container.def";
       err = blocking_exec(scp_call);
+      if(err)
+        return err;
+     
+      // Kick off builder
+      err = builder_run();
     } 
     else if(split_command[1] == "-f") {
+      // Initiate SCP
       std::string scp_call{gScpBase};
       scp_call += " -f " + unique_work_path() + "/container.img";
       err = blocking_exec(scp_call);
+ 
+      // Cleanup work area
+      builder_cleanup();
     }
     else {
       throw std::system_error(EINVAL, std::generic_category(), "scp");
@@ -170,10 +176,7 @@ int main(int argc, char** argv) {
   int err;
 
   try {
-    if(split_command[0] == gBuilderBase) {
-      err = run_SingularityBuilder(split_command);
-    }
-    else if(split_command[0] == gScpBase){
+    if(split_command[0] == gScpBase){
       err = run_scp(split_command);
     }
     else if(split_command[0] == gGetWorkPath) {
