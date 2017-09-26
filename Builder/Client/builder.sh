@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-  echo "Usage: builder name.img definition-file.def megabytes"
+if [ $# -ne 2 ]; then
+  echo "Usage: builder container.name container.def"
   exit 1
 fi
 
@@ -18,11 +18,11 @@ function cleanup {
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT EXIT ERR
 
-IMG_PATH="$1"
+NAME_PATH="$1"
 DEF_PATH="$2"
 
 # Builder details
-export VM_IP="128.219.187.226"
+export VM_IP="128.219.187.229"
 export KEY_FILE="./BuilderKey"
 
 # Socket file used for SSH control master on the host
@@ -37,12 +37,9 @@ export CONTROL_SOCKET='~/.ssh/ControlSocket-%l%h%p%r'
 WORK_PATH=$(/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'GetWorkPath')
 
 # Copy definition file
-# WORK_PATH will be created on behalf of this command
+# WORK_PATH will be created on behalf of this command and the build process kicked off
 /usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no ${DEF_PATH} builder@${VM_IP}:${WORK_PATH}/container.def
-
-# Build singularity container in docker
-/usr/bin/ssh -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} /usr/local/bin/SingularityBuilder
 
 # Copy container file back
 # WORK_PATH will be automatically deleted after this operation
-/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.name ${IMG_PATH}
+/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:${WORK_PATH}/container.name ${NAME_PATH}
