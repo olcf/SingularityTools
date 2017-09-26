@@ -75,6 +75,6 @@ LOOP_DEVICE="/dev/loop${LOOP_ID}"
 
 # Build container
 cd ${TMP_WORK_DIR}
-docker run -it --device=${LOOP_DEVICE} --cap-add SYS_ADMIN --cap-add SYS_CHROOT -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity create --size ${CONTAINER_SIZE} ./container.name
-docker run -it --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity bootstrap ./container.name ./container.def
+docker run -it --device=${LOOP_DEVICE} --cap-add SYS_ADMIN --cap-add SYS_CHROOT -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity create --size ${CONTAINER_SIZE} ./container.img
+docker run -it --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder singularity bootstrap ./container.img ./container.def
 
