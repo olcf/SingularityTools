@@ -15,8 +15,8 @@
 
 // The following commands are allowed:
 // /usr/local/bin/SingularityBuilder container_size
-// /usr/bin/scp -t unique_work_path()/container.def
-// /usr/bin/scp -f unique_work_path()/container.img
+// scp -t unique_work_path()/container.def
+// scp -f unique_work_path()/container.img
 // GetWorkPath
 
 // File namespace(static)
@@ -105,8 +105,8 @@ namespace {
   }
 
   // We allow exactly two scp cases, the command passed to SSH_ORIGINAL_COMMAND is NOT the same is is run on the client
-  // /usr/bin/scp -t unique_work_path()/container.def
-  // /usr/bin/scp -f unique_work_path()/container.img
+  // scp -t unique_work_path()/container.def
+  // scp -f unique_work_path()/container.img
   // Upon transfering the definition we create the unique directory and upon transfering the final image we delete it 
   int run_scp(const std::vector<std::string>& split_command) {
     // Check number of arguments
