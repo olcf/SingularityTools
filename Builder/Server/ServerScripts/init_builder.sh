@@ -34,9 +34,14 @@ touch $LOOP_FILE
 for i in $(seq 0 ${LOOP_MAX}); do
   echo $i >> $LOOP_FILE
 done
+sudo chown builder $LOOP_FILE
+sudo chgrp builder $LOOP_FILE
 
 # Create file for simple user queue
-touch /home/builder/BuildQueue
+QUEUE_FILE=/home/builder/BuildQueue
+touch $QUEUE_FILE
+sudo chown builder $QUEUE_FILE
+sudo chgrp builder $QUEUE_FILE
 
 # Create singularity builder docker image
 sudo docker build -t singularity_builder -f ${SCRIPTS_DIR}/Dockerfile  .
