@@ -75,8 +75,8 @@ sudo make install
 cp ${SCRIPTS_DIR}/SingularityBuilder /usr/local/bin
 
 # Add security options to lock down builder user SSH capabilities
-SSH_KEY_OPTS='command="/usr/local/bin/SSH_Sanitizer \"\${SSH_ORIGINAL_COMMAND}\"",no-port-forwarding,no-X11-forwarding,no-agent-forwarding '
-sudo sh -c "echo -n ${SSH_KEY_OPTS} > /home/builder/.ssh/authorized_keys"
+SSH_KEY_OPTS='command="/usr/local/bin/SSH_Sanitizer \"\${SSH_ORIGINAL_COMMAND}\"",no-port-forwarding,no-X11-forwarding,no-agent-forwarding'
+sudo sh -c "echo -n \"${SSH_KEY_OPTS} \" > /home/builder/.ssh/authorized_keys"
 
 # Add newly created key to builders authorized_keys
 sudo sh -c "cat /home/cades/BuilderKey.pub >> /home/builder/.ssh/authorized_keys"
