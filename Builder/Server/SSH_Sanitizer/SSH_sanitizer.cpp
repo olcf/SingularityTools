@@ -22,7 +22,7 @@
 // File namespace(static)
 namespace {
   constexpr auto gBuilderBase = "/usr/local/bin/SingularityBuilder";
-  constexpr auto gScpBase = "/usr/bin/scp";
+  constexpr auto gScpBase = "scp";
   constexpr auto gBuilderDirectoryPath = "/home/builder/container_scratch/";
   constexpr auto gGetWorkPath = "GetWorkPath";
 
@@ -42,7 +42,7 @@ namespace {
     int return_code;
 
     // Launch the command asynchronously
-    bp::child child_proc(command, child_group, env, bp::std_in.close());
+    bp::child child_proc(command, child_group, env);
     // Test if we should terminate the command
     // This can be set by signal handlers
     while(child_proc.running()) {
@@ -56,26 +56,6 @@ namespace {
     return_code = child_proc.exit_code();
 
     return return_code;
-  }
-
-  // Retrive the build host IP from SSH_CONNECTION env var
-  std::string builder_ip() {
-    char const* tmp = getenv("SSH_CONNECTION");
-    if ( tmp == NULL ) {
-      throw std::system_error(EIDRM, std::generic_category(), "SSH_CONNECTION");
-    }
-
-    std::string SSH_CONNECTION(tmp);
-
-    // Remove any leading/trailing white space
-    boost::trim(SSH_CONNECTION);
-
-    std::vector<std::string> split_connection;
-    boost::split(split_connection, SSH_CONNECTION, boost::is_any_of("\t "), boost::token_compress_on);
-    if(split_connection.size() != 4) {
-      throw std::system_error(EINVAL, std::generic_category(), "SSH_CONNECTION");
-    }
-    return split_connection[2];
   }
 
   // Get the temporary unique build directory, based on concating the SSH_CONNECTION env var
