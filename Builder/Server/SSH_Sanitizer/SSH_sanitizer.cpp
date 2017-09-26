@@ -56,13 +56,14 @@ namespace {
     return return_code;
   }
 
-  // Get the temporary unique build directory, based on concating the SSH_CONNECTION env var
-  std::string unique_work_path() {
+  // Get a unique ID based upon SSH_CONNECTION information
+  // This allows us to keep track of a user who is making multiple SSH calls using control master
+  std::string unique_id() {
     char const* tmp = getenv("SSH_CONNECTION");
     if ( tmp == NULL ) {
       throw std::system_error(EIDRM, std::generic_category(), "SSH_CONNECTION");
     }
- 
+
     std::string SSH_CONNECTION(tmp);
 
     // Remove any leading/trailing white space
@@ -78,7 +79,12 @@ namespace {
     // Replace the spaces with underscores
     boost::replace_all(SSH_CONNECTION, " ", "_");
 
-    return gBuilderDirectoryPath + SSH_CONNECTION;
+    return SSH_CONNECTION;
+  }
+
+  // Get the temporary unique build directory, based on concating the SSH_CONNECTION env var
+  std::string unique_work_path() {
+    return gBuilderDirectoryPath + unique_id();
   }
 
   void builder_prep() {
@@ -87,7 +93,7 @@ namespace {
 
   int builder_run() {
     std::string builder_call{gBuilderBase};
-    builder_call += " " + unique_work_path() + " " + unique_work_path();
+    builder_call += " " + unique_id() + " " + unique_work_path();
     int err = blocking_exec(builder_call);
     return err;
   }

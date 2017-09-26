@@ -9,7 +9,7 @@ export LOOP_ID=""
 export LOOP_FILE="/home/builder/AvailableLoopDevices"
 export LOOP_LOCK="/tmp/ContainerBuilder.lock"
 export QUEUE_FILE="/home/builder/BuildQueue"
-export DOCKER_ID=""
+export DOCKER_NAME=""
 
 
 # On exit kill control master process
@@ -20,8 +20,8 @@ function null_cleanup {
 }
 function cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT EXIT
-  if [ -n "$DOCKER_ID" ]; then
-    docker stop $DOCKER_ID
+  if [ -n "$DOCKER_NAME" ]; then
+    docker stop $DOCKER_NAME
   fi
 
   # Make loop device available, if reserved
@@ -86,4 +86,4 @@ LOOP_DEVICE="/dev/loop${LOOP_ID}"
 
 # Build container
 cd ${TMP_WORK_DIR}
-DOCKER_ID=$(docker run -d --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder)
+docker run --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE --name ${UNIQUE_ID} -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder
