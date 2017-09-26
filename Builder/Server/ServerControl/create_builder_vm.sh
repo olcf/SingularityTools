@@ -62,6 +62,6 @@ rm -rf ContainerBuilderIP
 echo $VM_IP > ${SCRIPT_DIR}/BuilderIP
 
 # Retrieve private key for builder
-scp -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
+scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
 
 echo "Started ${VM_UUID} with external IP ${VM_IP} using ${KEY_FILE}"

@@ -2,8 +2,8 @@
   
 set -e
 
-UNIQUE_ID=$2
-TMP_WORK_DIR=$3
+UNIQUE_ID=$1
+TMP_WORK_DIR=$2
 
 export LOOP_ID=""
 export LOOP_FILE="/home/builder/AvailableLoopDevices"
