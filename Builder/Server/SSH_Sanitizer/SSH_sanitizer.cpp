@@ -40,12 +40,12 @@ namespace {
     int return_code;
 
     // Launch the command asynchronously
-    bp::child child_proc(command, child_group, env);
+    bp::child child_proc(command, env);
     // Test if we should terminate the command
     // This can be set by signal handlers
     while(child_proc.running()) {
       if(gShouldKill) {
-        pid_t pid = child_group.id();
+        pid_t pid = child_proc.id();
         kill(pid, SIGINT);
       }
     }
