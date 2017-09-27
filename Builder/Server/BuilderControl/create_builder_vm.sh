@@ -1,7 +1,20 @@
 #!/bin/bash
 
 # To get the the nova command lines tool "sudo pip install python-novaclient"
-# @TODO call destroy_builder on ctrl-c
+
+# Destroy any existing builder if one exists
+./destroy_builder_vm.sh
+
+# Destry the builder if exiting early
+function null_cleanup {
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+}
+function cleanup {
+  trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+  ./destroy_builder_vm.sh
+  exit
+}
+trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
 
 # Get script directory
 SCRIPT_DIR=$(dirname $0)
@@ -50,6 +63,7 @@ function spin_me_right_round() {
 until [[ "$(nova show ${VM_UUID} | awk '/status/ {print $4}')" == "ACTIVE" ]]; do
   spin_me_right_round
 done
+
 # Wait for SSH to be usable.
 until nova console-log ${VM_UUID} | grep "running 'modules:final'" > /dev/null 2>&1; do
   spin_me_right_round

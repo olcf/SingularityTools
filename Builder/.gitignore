@@ -6,3 +6,6 @@ secure.yaml
 launch_wrapper/build/*
 dummy.txt
 openrc.sh
+BuilderKey
+CadesKey
+openrc.sh

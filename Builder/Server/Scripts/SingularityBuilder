@@ -1,5 +1,4 @@
 #!/bin/bash
-  
 set -e
 
 UNIQUE_ID=$1

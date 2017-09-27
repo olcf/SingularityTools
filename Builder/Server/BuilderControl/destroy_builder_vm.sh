@@ -12,7 +12,7 @@ rm ${SCRIPT_DIR}/CadesKey
 rm ${SCRIPT_DIR}/BuilderKey
 
 # Remove IP file
-rm ${SCRIPT_DIR}/ContainerBuilderIP
+rm ${SCRIPT_DIR}/BuilderIP
 
 # Delete VM
 nova delete ContainerBuilder
