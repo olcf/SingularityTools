@@ -86,4 +86,4 @@ LOOP_DEVICE="/dev/loop${LOOP_ID}"
 
 # Build container
 cd ${TMP_WORK_DIR}
-docker run --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add DAC_OVERRIDE --name ${UNIQUE_ID} -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder
+docker run --device=${LOOP_DEVICE} --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name ${UNIQUE_ID} -v ${TMP_WORK_DIR}:/work_dir -w /work_dir singularity_builder
