@@ -13,6 +13,16 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 sudo apt-get update
 sudo apt-get install -y docker-ce
 
+# Docker by default seems to use aufs which isn't compatible with singularity(atleast when bootstrapping from docker)
+# We force the use of overlayfs instead: https://docs.docker.com/engine/userguide/storagedriver/overlayfs-driver/#configure-docker-with-the-overlay-or-overlay2-storage-driver
+sudo systemctl stop docker
+cat << EOF > /etc/docker/daemon.json
+{
+  "storage-driver": "overlay2"
+}
+EOF
+sudo systemctl start docker
+
 # Enable apparmor profile
 sudo apparmor_parser -r -W ${SCRIPTS_DIR}/apparmour.builder
 
