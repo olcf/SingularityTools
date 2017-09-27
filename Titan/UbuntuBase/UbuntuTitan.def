@@ -6,13 +6,13 @@ From: ubuntu:zesty
 %post
 
 # Install basic system software
-apt-get update
-apt-get install -y software-properties-common wget pkg-config
+apt update
+apt install -y software-properties-common wget pkg-config
 apt-add-repository universe
-apt-get update
+apt update
 
 # Install MPICH
-apt-get install -y mpich
+apt install -y mpich
 
 # Install the toolkit
 wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
@@ -21,14 +21,14 @@ sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
 
 # Install GCC compatable with CUDA/7.5
-apt-get install -y gcc-4.9 g++-4.9
+apt install -y gcc-4.9 g++-4.9
 
 # Patch CUDA toolkit to work with non system default GCC
 ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc
 ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
 # Install MPI4PY against mpich(python-mpi4py is built against OpenMPI)
-apt-get install -y python-pip
+apt install -y python-pip
 pip install mpi4py
 
 # Patch container to work on Titan
@@ -39,4 +39,3 @@ rm TitanBootstrap.sh
 %environment
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
 export PATH=${PATH-}:/usr/local/cuda/bin
-
