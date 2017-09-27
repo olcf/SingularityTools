@@ -30,6 +30,10 @@ The following directories should be created within the container to enable acces
 /ccs/sw
 /autofs/nccs-svm1_sw
 
+# Mount point for proj read-only dirs
+mkdir -p /ccs/proj
+mkdir -p /autofs/nccs-svm1_proj
+
 # Mount point stub file for init script
 /.singularity.d/env/98-OLCF.sh
 ```

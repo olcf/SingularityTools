@@ -47,13 +47,6 @@ rm TitanPrep.sh
 ```
 `TitanPrep.sh` is a small script to create necessary directories in the container used for bind mounting at runtime. Alternatively the `TitanPrep.sh` may be run, unprivileged, on the Titan internal login nodes after the container has been built.
 
-## Building the container
-```bash
-$ sudo singularity create --size 8000 CentosTitan.img
-$ sudo singularity bootstrap CentosTitan.img CentosTitan.def
-```
-Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
-
 ```sh
 %environment
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64
@@ -61,6 +54,13 @@ export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin
 ```
 
 Lastly ensure that any environment variables required at runtime are persisted.
+
+## Building the container
+```bash
+$ singularity create --size 8000 CentosTitan.img
+$ sudo singularity bootstrap CentosTitan.img CentosTitan.def
+```
+Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
 
 ## Transfering the container
 Once the container has been built on a local resource it can be transferred to the OLCF using standard data transfer utilities. Currently Globus Online is the recommended way to facilitate this transfer.
