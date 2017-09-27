@@ -67,7 +67,7 @@ $ sudo singularity bootstrap UbuntuTitan.img UbuntuTitan.def
 ```
 Building the container does not require any Titan specific steps. The only care that must be taken is ensuring the container is large enough to handle the `CUDA Toolkit` installation. For our example application 8 gigabytes is sufficient.
 
-## Transfering the container
+## Transferring the container
 Once the container has been built on a local resource it can be transferred to the OLCF using standard data transfer utilities. Currently Globus Online is the recommended way to facilitate this transfer.
 
 ## Running the container
