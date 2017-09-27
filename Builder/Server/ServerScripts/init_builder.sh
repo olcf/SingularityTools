@@ -16,7 +16,7 @@ sudo apt-get install -y docker-ce
 # Enable apparmor profile
 sudo apparmor_parser -r -W ${SCRIPTS_DIR}/apparmour.builder
 
-# Create builder user whichout shell access
+# Create builder user
 sudo useradd --create-home --home-dir /home/builder --shell /bin/bash builder
 
 # Allow builder user to run docker as sudo by adding to docker group
