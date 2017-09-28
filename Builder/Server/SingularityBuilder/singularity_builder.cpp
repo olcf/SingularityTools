@@ -209,7 +209,10 @@ int main(int argc, char** argv) {
     // Once a loop device is available execute the build command
     std::string loop_device;
     loop_device += "/dev/loop" + std::to_string(loop_id);
-//    err = blocking_exec(builder_command);
+    std::string builder_command;
+    builder_command += "docker run --device=" + loop_device + " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
+                       + job_id + " -v " + work_path + ":/work_dir -w /work_dir singularity_builder";
+    err = blocking_exec(builder_command);
 
   } catch(const std::system_error& error) {
       std::cerr << "ERROR: " << error.code() << " - " << error.what() << std::endl;
