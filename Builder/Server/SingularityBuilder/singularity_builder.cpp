@@ -67,7 +67,7 @@ namespace {
   void exit_queue(sqlite3 *db, const std::string& job_id) {
     char *db_err = NULL;
     std::string SQL_command;
-    SQL_command += "DELETE FROM build_queue WHERE job_id = " + job_id + ");";
+    SQL_command += "DELETE FROM build_queue WHERE job_id = " + job_id + ";";
     int rc = sqlite3_exec(db, SQL_command.c_str(), NULL, NULL, &db_err);
     if(rc != SQLITE_OK) {
       std::string err(db_err);
@@ -121,7 +121,7 @@ namespace {
     // Remove the loop device id from available devices
     if(loop_id >= 0) {
       std::string SQL_remove;
-      SQL_remove = "DELETE FROM available_loops WHERE loop_id = " + std::to_string(loop_id) + ");";
+      SQL_remove = "DELETE FROM available_loops WHERE loop_id = " + std::to_string(loop_id) + ";";
       int rc = sqlite3_exec(db, SQL_remove.c_str(), NULL, NULL, &db_err);
       if(rc != SQLITE_OK) {
         std::string err(db_err);
