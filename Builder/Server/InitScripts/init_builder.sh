@@ -65,8 +65,7 @@ sudo chgrp builder /home/builder/container_scratch
 ssh-keygen -f /home/cades/BuilderKey
 sudo chown cades /home/cades/BuilderKey
 
-# Build the the Command Sanitizer application, providing it the builder IP
-# This requires a recent version of boost and so we
+# Install a new version of boost
 sudo apt-get install -y cmake
 wget https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.gz
 tar xf boost_1_65_1.tar.gz
@@ -74,6 +73,7 @@ cd boost_1_65_1
 ./bootstrap.sh
 sudo ./b2 install
 
+# Install SSH_Sanitizer
 cd ${SCRIPTS_DIR}/../SSH_Sanitizer
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" ..
@@ -81,7 +81,11 @@ make
 sudo make install
 
 # Install SingularityBuilder
-cp ${SCRIPTS_DIR}/SingularityBuilder /usr/local/bin
+cd ${SCRIPTS_DIR}/../SingularityBuilder
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" ..
+make
+sudo make install
 
 # Add security options to lock down builder user SSH capabilities
 SSH_KEY_OPTS='command=\"/usr/local/bin/SSH_Sanitizer \\\"\${SSH_ORIGINAL_COMMAND}\\\"\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding'
