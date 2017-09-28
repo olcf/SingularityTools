@@ -56,6 +56,7 @@ namespace {
     }
   }
 
+  // Remove a job from the queue
   void exit_queue(sqlite3 *db, std::string job_id) {
     char *db_err = NULL;
     std::string SQL_command;
@@ -68,6 +69,59 @@ namespace {
     }
   }
 
+  // Return true if the specified job is at the top of the queue
+  int first_in_queue_callback(void *first_in_queue, int count, char** values, char** names) {
+    *static_cast<std::string*>(first_in_queue) = values[0];
+    return 0;
+  }
+  bool first_in_queue(sqlite3 *db, std::string job_id) {
+    char *db_err = NULL;
+    std::string first_in_queue;
+    std::string SQL_command;
+    SQL_command += "SELECT job_id FROM build_queue ORDER BY id ASC LIMIT 1;";
+    int rc = sqlite3_exec(db, SQL_command.c_str(), first_in_queue_callback, &first_in_queue, &db_err);
+    if(rc != SQLITE_OK) {
+      std::string err(db_err);
+      sqlite3_free(db_err);
+      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+    }
+    return first_in_queue == job_id;
+  }
+
+  // Reserve a valid loop device id if possible, or -1 if no device is available
+  int reserve_loop_id_callback(void *loop_id, int count, char** values, char** names) {
+    *static_cast<int*>(loop_id) = std::stoi(std::string(values[0]));
+
+    return 0;
+  }
+  int reserve_loop_id(sqlite3 *db) {
+    char *db_err = NULL;
+    int loop_id;
+    std::string SQL_command;
+    SQL_command += "SELECT loop_id FROM available_loops LIMIT 1;";
+    int rc = sqlite3_exec(db, SQL_command.c_str(), reserve_loop_id_callback, &loop_id, &db_err);
+    if(rc != SQLITE_OK) {
+      std::string err(db_err);
+      sqlite3_free(db_err);
+      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+    }
+    return loop_id;
+  }
+
+  // Release a loop id back to the pool of available devices
+  int release_loop_id(sqlite3 *db, int loop_id) {
+    char *db_err = NULL;
+    std::string SQL_command;
+    SQL_command += "INSERT INTO available_loops(loop_id) VALUES(" + std::to_string(loop_id) + ");";
+    int rc = sqlite3_exec(db, SQL_command.c_str(), reserve_loop_id_callback, &loop_id, &db_err);
+    if(rc != SQLITE_OK) {
+      std::string err(db_err);
+      sqlite3_free(db_err);
+      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+    }
+    return loop_id;
+  }
+
   // Initialize the build process
   void builder_init(sqlite3 **db) {
     int db_rc;
@@ -78,24 +132,17 @@ namespace {
   }
 
   // Cleanup the build process
-  void builder_cleanup(sqlite3 *db, std::string job_id) {
-    // Attempt to remove job from queue
+  void builder_cleanup(sqlite3 *db, std::string job_id, int loop_id) {
+    // Remove job from queue
     exit_queue(db, job_id);
+
+    // Add loop device back to pool
+    if(loop_id >= 0)
+      release_loop_id(db, loop_id);
 
     // Close database
     sqlite3_close(db);
   }
-
-
-/*
-  static int first_in_queue_callback(void *NotUsed, int argc, char **argv, char **azColName) {
-  }
-
-  // Return true if the specified unique_id is at the top of the queue
-  bool first_in_queue(std::string unique_id) {
-     
-  }
-*/
 } // End anonymous namespace
 
 int main(int argc, char** argv) {  
@@ -120,6 +167,7 @@ int main(int argc, char** argv) {
 
   int err;
   sqlite3 *db = NULL; 
+  int loop_id = -1;
 
   try {
     // Establish connection to database
@@ -127,33 +175,33 @@ int main(int argc, char** argv) {
 
     // Enter job request into queue
     enter_queue(db, job_id);
- /* 
+  
     // Wait in queue for a loop device to become available
-    int loop_id = -1;
     while(loop_id < 0) {
-      if(first_in_queue(job_id)) {
-        loop_id = get_loop_device();
-        if(loop_id > 0) {
-          exit_queue(job_id);
-        }
+      if(first_in_queue(db, job_id)) {
+        loop_id = reserve_loop_id(db);
+        if(loop_id >= 0)
+          exit_queue(db, job_id);
       }
     }   
 
     // Once a loop device is available execute the build command
-*/
+    std::string loop_device;
+    loop_device += "/dev/loop" + std::to_string(loop_id);
 //    err = blocking_exec(builder_command);
 
   } catch(const std::system_error& error) {
-      std::cout << "ERROR: " << error.code() << " - " << error.what() << std::endl;
+      std::cerr << "ERROR: " << error.code() << " - " << error.what() << std::endl;
       err = error.code().value();
-      builder_cleanup(db, job_id);
-  } catch(const boost::filesystem::filesystem_error& error) {
-      std::cout << "ERROR: " << error.what() << std::endl;
+  } catch(const std::exception &error) {
+      std::cerr<<"ERROR: " << error.what() << std::endl;
       err = EXIT_FAILURE;
-      builder_cleanup(db, job_id);
+  } catch(...) {
+      std::cerr << "ERROR: Unknown" << std::endl;
+      err = EXIT_FAILURE;
   }
 
-  builder_cleanup(db, job_id);
+  builder_cleanup(db, job_id, loop_id);
 
   return err;
 }

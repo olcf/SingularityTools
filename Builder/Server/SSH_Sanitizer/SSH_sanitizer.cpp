@@ -213,7 +213,14 @@ int main(int argc, char** argv) {
       std::cout << "ERROR: " << error.what() << std::endl;
       err = EXIT_FAILURE;
       builder_cleanup();
+  } catch(const std::exception &error) {
+      std::cerr<<"ERROR: " << error.what() << std::endl;
+      err = EXIT_FAILURE;
+  } catch(...) {
+      std::cerr << "ERROR: Unknown" << std::endl;
+      err = EXIT_FAILURE; 
   }
+
 
   return err;
 }
