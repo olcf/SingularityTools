@@ -18,11 +18,14 @@ namespace {
     gShouldKill = 1;
   }
 
-  // Stop the named docker container
+  // Stop then remove the named docker container
   void docker_stop(const std::string& instance_name) {
     std::string stop_command;
     stop_command += "docker stop " + instance_name;
     boost::process::system(stop_command);
+    std::string rm_command;
+    rm_command += "docker rm " + instance_name;
+    boost::process::system(rm_command);
   }
 
   // Execute a docker run command
@@ -36,7 +39,6 @@ namespace {
     bp::child docker_proc(command);
 
     // Test if we should stop docker
-    // This can be set by signal handlers
     while(docker_proc.running()) {
       if(gShouldKill) {
         docker_stop(instance_name);
@@ -218,7 +220,7 @@ int main(int argc, char** argv) {
     loop_device += "/dev/loop" + std::to_string(loop_id);
     std::string builder_command;
     builder_command += "docker run --device=" + loop_device + " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
-                       + job_id + " -v " + work_path + ":/work_dir -w /work_dir singularity_builder";
+                       + job_id + " -mount type=bind,source=" + work_path + ",destination=/work_dir -w /work_dir singularity_builder";
     err = docker_run(builder_command, job_id);
 
   } catch(const std::system_error& error) {
