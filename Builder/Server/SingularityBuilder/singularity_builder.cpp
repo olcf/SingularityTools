@@ -43,16 +43,11 @@ namespace {
     return return_code;
   }
   
-  // Cleanup the build process
-  void builder_cleanup(sqlite3 *db) {
-    sqlite3_close(db);
-  }
-
   // Enter a new job into the queue
-  void enter_queue(sqlite3* db, std::string unique_id) {
+  void enter_queue(sqlite3* db, std::string job_id) {
     char *db_err = NULL;
     std::string SQL_command;
-    SQL_command += "INSERT INTO build_queue(user_id) VALUES(" + unique_id + ")";
+    SQL_command += "INSERT INTO build_queue(job_id) VALUES(" + job_id + ");";
     int rc = sqlite3_exec(db, SQL_command.c_str(), NULL, NULL, &db_err);
     if(rc != SQLITE_OK) {
       std::string err(db_err);
@@ -60,6 +55,38 @@ namespace {
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
   }
+
+  void exit_queue(sqlite3 *db, std::string job_id) {
+    char *db_err = NULL;
+    std::string SQL_command;
+    SQL_command += "DELETE FROM build_queue WHERE job_id = " + job_id + ");";
+    int rc = sqlite3_exec(db, SQL_command.c_str(), NULL, NULL, &db_err);
+    if(rc != SQLITE_OK) {
+      std::string err(db_err);
+      sqlite3_free(db_err);
+      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+    }
+  }
+
+  // Initialize the build process
+  void builder_init(sqlite3 **db) {
+    int db_rc;
+    db_rc = sqlite3_open(gDatabase, db);
+    if(db_rc != SQLITE_OK) {
+      throw std::system_error(ECONNABORTED, std::generic_category(), sqlite3_errmsg(*db));
+    }
+  }
+
+  // Cleanup the build process
+  void builder_cleanup(sqlite3 *db, std::string job_id) {
+    // Attempt to remove job from queue
+    exit_queue(db, job_id);
+
+    // Close database
+    sqlite3_close(db);
+  }
+
+
 /*
   static int first_in_queue_callback(void *NotUsed, int argc, char **argv, char **azColName) {
   }
@@ -78,7 +105,7 @@ int main(int argc, char** argv) {
   }
 
   // Create string from char* argument
-  std::string unique_id(argv[1]);
+  std::string job_id(argv[1]);
   std::string work_path(argv[2]);
 
   // Register signal handlers
@@ -96,22 +123,18 @@ int main(int argc, char** argv) {
 
   try {
     // Establish connection to database
-    int db_rc;
-    db_rc = sqlite3_open(gDatabase, &db);
-    if(db_rc != SQLITE_OK) {
-      throw std::system_error(ECONNABORTED, std::generic_category(), sqlite3_errmsg(db));
-    }
+    builder_init(&db);
 
     // Enter job request into queue
-//    enter_queue(unique_id);
+    enter_queue(db, job_id);
  /* 
     // Wait in queue for a loop device to become available
     int loop_id = -1;
     while(loop_id < 0) {
-      if(first_in_queue(unique_id)) {
+      if(first_in_queue(job_id)) {
         loop_id = get_loop_device();
         if(loop_id > 0) {
-          exit_queue(unique_id);
+          exit_queue(job_id);
         }
       }
     }   
@@ -123,14 +146,14 @@ int main(int argc, char** argv) {
   } catch(const std::system_error& error) {
       std::cout << "ERROR: " << error.code() << " - " << error.what() << std::endl;
       err = error.code().value();
-      builder_cleanup(db);
+      builder_cleanup(db, job_id);
   } catch(const boost::filesystem::filesystem_error& error) {
       std::cout << "ERROR: " << error.what() << std::endl;
       err = EXIT_FAILURE;
-      builder_cleanup(db);
+      builder_cleanup(db, job_id);
   }
 
-  builder_cleanup(db);
+  builder_cleanup(db, job_id);
 
   return err;
 }
