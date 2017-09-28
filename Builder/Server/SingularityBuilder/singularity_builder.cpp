@@ -232,7 +232,11 @@ int main(int argc, char** argv) {
       err = EXIT_FAILURE;
   }
 
-  builder_cleanup(db, job_id, job_id, loop_id);
+  try {
+    builder_cleanup(db, job_id, job_id, loop_id);
+  } catch(...) {
+    std::cerr << "ERROR: Cleanup Failed" << std::endl;
+  }
 
   return err;
 }
