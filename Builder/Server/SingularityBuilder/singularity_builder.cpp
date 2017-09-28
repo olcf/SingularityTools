@@ -97,14 +97,35 @@ namespace {
   int reserve_loop_id(sqlite3 *db) {
     char *db_err = NULL;
     int loop_id;
-    std::string SQL_command;
-    SQL_command += "SELECT loop_id FROM available_loops LIMIT 1;";
-    int rc = sqlite3_exec(db, SQL_command.c_str(), reserve_loop_id_callback, &loop_id, &db_err);
+
+    // Begin transaction
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+
+    // Retrive a loop device id if possible
+    std::string SQL_fetch;
+    SQL_fetch = "SELECT loop_id FROM available_loops LIMIT 1;";
+    int rc = sqlite3_exec(db, SQL_fetch.c_str(), reserve_loop_id_callback, &loop_id, &db_err);
     if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
+
+    // Remove the loop device id from available devices
+    if(loop_id >= 0) {
+      std::string SQL_remove;
+      SQL_remove = "DELETE FROM available_loops WHERE loop_id = " + std::to_string(loop_id) + ");";
+      int rc = sqlite3_exec(db, SQL_remove.c_str(), NULL, NULL, &db_err);
+      if(rc != SQLITE_OK) {
+        std::string err(db_err);
+        sqlite3_free(db_err);
+        throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      }
+    }
+
+    // End transaction
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
+
     return loop_id;
   }
 
