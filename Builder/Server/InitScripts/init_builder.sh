@@ -38,20 +38,18 @@ for i in $(seq 8 ${LOOP_MAX}); do
   sudo mknod -m 660 "/dev/loop${i}" b 7 "$i"
 done
 
-# Create file containing available loop devices
-LOOP_FILE="/home/builder/AvailableLoopDevices"
-touch $LOOP_FILE
-for i in $(seq 0 ${LOOP_MAX}); do
-  echo $i >> $LOOP_FILE
-done
-sudo chown builder $LOOP_FILE
-sudo chgrp builder $LOOP_FILE
+# Install SQLite
+sudo apt-get install -y sqlite3 libsqlite3-dev
 
-# Create file for simple user queue
-QUEUE_FILE=/home/builder/BuildQueue
-touch $QUEUE_FILE
-sudo chown builder $QUEUE_FILE
-sudo chgrp builder $QUEUE_FILE
+# Create the Builder database with loop device and build queue tables
+# We use AUTOINCREMENT so we can can sort our queue
+sqlite3 Builder 'CREATE TABLE available_loops(id INTEGER PRIMARY KEY, loop_id INTEGER);'
+sqlite3 Builder 'CREATE TABLE build_queue(id INTEGER PRIMARY KEY AUTOINCREMENT, job_id STRING);'
+
+# Populate the available loop devices
+for i in $(seq 0 ${LOOP_MAX}); do
+  sqlite3 Builder "INSERT into available_loops(loop_id) VALUES($i)"
+done
 
 # Create singularity builder docker image
 sudo docker build -t singularity_builder -f ${SCRIPTS_DIR}/Dockerfile  .
