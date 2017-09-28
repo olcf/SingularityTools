@@ -169,7 +169,7 @@ namespace {
 int main(int argc, char** argv) {  
   // SingularityBuilder requires two arguments, a uniqueID string and a work path string
   if(argc != 3) {
-    std::cerr<<"SingularityBuilder: Invalid argument count\n";
+    std::cerr<<"ERROR: SingularityBuilder: Invalid argument count\n";
     return EXIT_FAILURE;
   }
 
