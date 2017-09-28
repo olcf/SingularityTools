@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/singularity_builder.cpp
+iostream
+-
+string
+-
+sstream
+-
+errno.h
+-
+boost/algorithm/string.hpp
+-
+boost/filesystem.hpp
+-
+boost/process.hpp
+-
+csignal
+-
+system_error
+-
+sqlite3.h
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/sqlite3.h
+

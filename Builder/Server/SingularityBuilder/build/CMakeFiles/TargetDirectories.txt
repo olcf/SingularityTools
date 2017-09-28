@@ -1,0 +1,7 @@
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/install/strip.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/edit_cache.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/rebuild_cache.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/SingularityBuilder.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/list_install_components.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/install/local.dir
+/home/atj/SingularityTools/Builder/Server/SingularityBuilder/build/CMakeFiles/install.dir
