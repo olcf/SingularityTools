@@ -18,33 +18,40 @@ namespace {
     gShouldKill = 1;
   }
 
-  // Preform a blocking exec
-  int blocking_exec(std::string command) {
-    namespace bp = boost::process;
+  // Stop the named docker container
+  void docker_stop(const std::string& instance_name) {
+    std::string stop_command;
+    stop_command += "docker stop " + instance_name;
+    boost::process::system(stop_command);
+  }
 
-    bp::environment env;   // Blank environment env
+  // Execute a docker run command
+  // Docker will ignore normal signals
+  // docker stop {container_name} must be used
+  int docker_run(const std::string& command, const std::string& instance_name) {
+    namespace bp = boost::process;
     int return_code;
 
     // Launch the command asynchronously
-    bp::child child_proc(command, env);
-    // Test if we should terminate the command
+    bp::child docker_proc(command);
+
+    // Test if we should stop docker
     // This can be set by signal handlers
-    while(child_proc.running()) {
+    while(docker_proc.running()) {
       if(gShouldKill) {
-        pid_t pid = child_proc.id();
-        kill(pid, SIGINT);
+        docker_stop(instance_name);
       }
     }
 
-    // Wait for child to complete
-    child_proc.wait();
-    return_code = child_proc.exit_code();
+    // Wait for docker to complete
+    docker_proc.wait();
+    return_code = docker_proc.exit_code();
 
     return return_code;
   }
   
   // Enter a new job into the queue
-  void enter_queue(sqlite3* db, std::string job_id) {
+  void enter_queue(sqlite3* db, const std::string& job_id) {
     char *db_err = NULL;
     std::string SQL_command;
     SQL_command += "INSERT INTO build_queue(job_id) VALUES(" + job_id + ");";
@@ -57,7 +64,7 @@ namespace {
   }
 
   // Remove a job from the queue
-  void exit_queue(sqlite3 *db, std::string job_id) {
+  void exit_queue(sqlite3 *db, const std::string& job_id) {
     char *db_err = NULL;
     std::string SQL_command;
     SQL_command += "DELETE FROM build_queue WHERE job_id = " + job_id + ");";
@@ -74,7 +81,7 @@ namespace {
     *static_cast<std::string*>(first_in_queue) = values[0];
     return 0;
   }
-  bool first_in_queue(sqlite3 *db, std::string job_id) {
+  bool first_in_queue(sqlite3 *db, const std::string& job_id) {
     char *db_err = NULL;
     std::string first_in_queue;
     std::string SQL_command;
@@ -130,7 +137,7 @@ namespace {
   }
 
   // Release a loop id back to the pool of available devices
-  int release_loop_id(sqlite3 *db, int loop_id) {
+  void release_loop_id(sqlite3 *db, int loop_id) {
     char *db_err = NULL;
     std::string SQL_command;
     SQL_command += "INSERT INTO available_loops(loop_id) VALUES(" + std::to_string(loop_id) + ");";
@@ -140,7 +147,6 @@ namespace {
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
-    return loop_id;
   }
 
   // Initialize the build process
@@ -153,7 +159,7 @@ namespace {
   }
 
   // Cleanup the build process
-  void builder_cleanup(sqlite3 *db, std::string job_id, int loop_id) {
+  void builder_cleanup(sqlite3 *db, std::string job_id, std::string docker_name, int loop_id) {
     // Remove job from queue
     exit_queue(db, job_id);
 
@@ -213,7 +219,7 @@ int main(int argc, char** argv) {
     std::string builder_command;
     builder_command += "docker run --device=" + loop_device + " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
                        + job_id + " -v " + work_path + ":/work_dir -w /work_dir singularity_builder";
-    err = blocking_exec(builder_command);
+    err = docker_run(builder_command, job_id);
 
   } catch(const std::system_error& error) {
       std::cerr << "ERROR: " << error.code() << " - " << error.what() << std::endl;
@@ -226,7 +232,7 @@ int main(int argc, char** argv) {
       err = EXIT_FAILURE;
   }
 
-  builder_cleanup(db, job_id, loop_id);
+  builder_cleanup(db, job_id, job_id, loop_id);
 
   return err;
 }
