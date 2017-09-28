@@ -9,12 +9,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_definitions(-DDEBUG=1)
 endif()
 
-if(NOT BUILDER_IP)
-  message(FATAL_ERROR "BUILDER_IP must be set!")
-endif()
-
-add_definitions("-DBUILDER_IP=\"${BUILDER_IP}\"")
-
 add_executable(SSH_Sanitizer SSH_sanitizer.cpp)
 
 # CMAKE doesn't seem to support the process component yet...

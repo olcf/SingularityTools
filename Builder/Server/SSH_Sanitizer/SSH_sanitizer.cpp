@@ -182,6 +182,7 @@ int main(int argc, char** argv) {
 
   int err;
 
+  // Attempt to run valid commands
   try {
     if(split_command[0] == gScpBase){
       err = run_scp(split_command);

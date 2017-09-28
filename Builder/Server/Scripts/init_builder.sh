@@ -74,10 +74,9 @@ cd boost_1_65_1
 ./bootstrap.sh
 sudo ./b2 install
 
-BUILDER_IP=$(ifconfig ens3 | awk '/inet addr/ {gsub("addr:", "", $2); print $2}')
 cd ${SCRIPTS_DIR}/../SSH_Sanitizer
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" -DBUILDER_IP="\"${BUILDER_IP}\"" ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" ..
 make
 sudo make install
 
