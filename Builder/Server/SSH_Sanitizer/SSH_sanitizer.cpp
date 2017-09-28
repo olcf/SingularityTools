@@ -149,7 +149,8 @@ namespace {
 int main(int argc, char** argv) {  
   // A single string argument is required
   if(argc != 2) {
-    throw std::system_error(EINVAL, std::generic_category(), "SSH_Sanitizer");
+    std::cerr<<"ERROR: SSH_Sanitizer invalid argument count\n";
+    return EXIT_FAILURE;
   }
 
   // Create string from char* argument
@@ -159,16 +160,10 @@ int main(int argc, char** argv) {
   std::string invalid_chars("!%^*~|;(){}[]$#\\");
   for(char c : invalid_chars) {
     if(command.find(c) != std::string::npos) {
-      throw std::system_error(EINVAL, std::generic_category(), "SSH_CONNECTION");
+      std::cerr<<"ERROR: SSH_Sanitizer invalid characters in argument\n";
+      return EXIT_FAILURE;
     }
   }
-
-  // Remove any leading/trailing white space
-  boost::trim(command);
-
-  // Split the string command on space(s) or tab(s)
-  std::vector<std::string> split_command;
-  boost::split(split_command, command, boost::is_any_of("\t "), boost::token_compress_on);
 
   // Register signal handlers
   std::signal(SIGABRT, signal_handler);
@@ -184,6 +179,13 @@ int main(int argc, char** argv) {
 
   // Attempt to run valid commands
   try {
+    // Remove any leading/trailing white space
+    boost::trim(command);
+
+    // Split the string command on space(s) or tab(s)
+    std::vector<std::string> split_command;
+    boost::split(split_command, command, boost::is_any_of("\t "), boost::token_compress_on);
+
     if(split_command[0] == gScpBase){
       err = run_scp(split_command);
     }
@@ -206,11 +208,11 @@ int main(int argc, char** argv) {
       throw std::system_error(ENOSYS, std::generic_category(), "SSH_Sanitizer");
     }
   } catch(const std::system_error& error) {
-      std::cout << "ERROR: " << error.code() << " - " << error.what() << std::endl;
+      std::cerr << "ERROR: " << error.code() << " - " << error.what() << std::endl;
       err = error.code().value();
       builder_cleanup();
   } catch(const boost::filesystem::filesystem_error& error) {
-      std::cout << "ERROR: " << error.what() << std::endl;
+      std::cerr << "ERROR: " << error.what() << std::endl;
       err = EXIT_FAILURE;
       builder_cleanup();
   } catch(const std::exception &error) {
