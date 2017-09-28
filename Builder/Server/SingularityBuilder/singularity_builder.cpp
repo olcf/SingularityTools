@@ -18,20 +18,17 @@ namespace {
     gShouldKill = 1;
   }
 
-  // Stop then remove the named docker container
-  void docker_stop(const std::string& instance_name) {
+  // Stop the docker container
+  void docker_stop(const std::string& container_name) {
     std::string stop_command;
-    stop_command += "docker stop " + instance_name;
+    stop_command += "docker stop " + container_name;
     boost::process::system(stop_command);
-    std::string rm_command;
-    rm_command += "docker rm " + instance_name;
-    boost::process::system(rm_command);
   }
 
   // Execute a docker run command
   // Docker will ignore normal signals
   // docker stop {container_name} must be used
-  int docker_run(const std::string& command, const std::string& instance_name) {
+  int docker_run(const std::string& command, const std::string& container_name) {
     namespace bp = boost::process;
     int return_code;
 
@@ -41,7 +38,7 @@ namespace {
     // Test if we should stop docker
     while(docker_proc.running()) {
       if(gShouldKill) {
-        docker_stop(instance_name);
+        docker_stop(container_name);
       }
     }
 
@@ -161,13 +158,18 @@ namespace {
   }
 
   // Cleanup the build process
-  void builder_cleanup(sqlite3 *db, std::string job_id, std::string docker_name, int loop_id) {
+  void builder_cleanup(sqlite3 *db, std::string job_id, std::string container_name, int loop_id) {
     // Remove job from queue
     exit_queue(db, job_id);
 
     // Add loop device back to pool
     if(loop_id >= 0)
       release_loop_id(db, loop_id);
+
+    // Remove the docker container
+    std::string rm_command;
+    rm_command += "docker rm " + container_name;
+    boost::process::system(rm_command);
 
     // Close database
     sqlite3_close(db);
