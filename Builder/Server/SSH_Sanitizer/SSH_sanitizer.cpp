@@ -189,18 +189,18 @@ int main(int argc, char** argv) {
     if(split_command[0] == gScpBase){
       err = run_scp(split_command);
     }
-    else if(split_command[0] == gGetWorkPath) {
+    else if(split_command[0] == gGetWorkPath && argc == 2) {
       std::cout<<unique_work_path()<<std::endl;
       err = 0;
     }
-    else if(split_command[0] == gBuilderPrep) {
+    else if(split_command[0] == gBuilderPrep && argc == 2) {
       builder_prep();
       err = 0;
     }
-    else if(split_command[0] == gBuilderRun) {
+    else if(split_command[0] == gBuilderRun && argc == 2) {
       return builder_run();
     }
-    else if(split_command[0] == gBuilderCleanup) {
+    else if(split_command[0] == gBuilderCleanup && argc == 2) {
       builder_cleanup();
       err = 0;
     }
