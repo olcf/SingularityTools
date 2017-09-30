@@ -10,10 +10,19 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 add_executable(SSH_Sanitizer SSH_sanitizer.cpp)
+add_executable(SSH_SanitizerTests tests.cpp)
 
+# Includes Catch
+add_subdirectory(../../CMake/catch)
+add_library(Catch INTERFACE)
+target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
+include_directories(${CATCH_INCLUDE_DIR})
+
+# Include Boost
 # CMAKE doesn't seem to support the process component yet...
 find_package(Boost 1.64.0 COMPONENTS system filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(SSH_Sanitizer ${Boost_LIBRARIES})
 
 install(TARGETS SSH_Sanitizer DESTINATION bin)
+install(TARGETS SSH_SanitizerTests DESTINATION bin)
