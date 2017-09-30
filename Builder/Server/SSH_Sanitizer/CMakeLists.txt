@@ -13,10 +13,14 @@ add_executable(SSH_Sanitizer SSH_sanitizer.cpp)
 add_executable(SSH_SanitizerTests tests.cpp)
 
 # Includes Catch
-add_subdirectory(../../CMake/catch)
+# The catch project will fetch the headers from github at build time
+add_subdirectory(CMake/catch)
 add_library(Catch INTERFACE)
 target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
 include_directories(${CATCH_INCLUDE_DIR})
+add_dependencies(SSH_SanitizerTests catch)
+add_test(NAME SSH_Sanitizer COMMAND SSH_SanitizerTests)
+target_link_libraries(SSH_SanitizerTests Catch)
 
 # Include Boost
 # CMAKE doesn't seem to support the process component yet...
