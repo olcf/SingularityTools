@@ -9,8 +9,10 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_definitions(-DDEBUG=1)
 endif()
 
-add_executable(SSH_Sanitizer SSH_sanitizer.cpp)
-add_executable(SSH_SanitizerTests tests.cpp)
+add_executable(SSH_Sanitizer src/main.cpp src/ssh_sanitizer.cpp)
+add_executable(SSH_SanitizerTests src/tests.cpp)
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Includes Catch
 # The catch project will fetch the headers from github at build time

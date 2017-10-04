@@ -19,14 +19,17 @@ namespace {
   }
 
   // Stop the docker container
+  // Note: docker rm should be called once the container is stopped
+  // This command is blocking
   void docker_stop(const std::string& container_name) {
+    std::cerr<<"Attempting to kill docker..."<<std::endl;
     std::string stop_command;
     stop_command += "docker stop " + container_name;
     boost::process::system(stop_command);
   }
 
   // Execute a docker run command
-  // Docker will ignore normal signals
+  // Docker has wonky signal handling so
   // docker stop {container_name} must be used
   int docker_run(const std::string& command, const std::string& container_name) {
     namespace bp = boost::process;
