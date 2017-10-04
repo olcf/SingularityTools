@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/CMake/catch/CMakeFiles/catch"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/CMake/catch/CMakeFiles/catch.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/CMake/catch/CMakeFiles/catch-complete.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-install.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-mkdir.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-download.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-update.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-patch.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-configure.rule"
+		},
+		{
+			"file" : "/home/atj/SingularityTools/Builder/Server/SSH_Builder/build/catch/src/catch-stamp/catch-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"catch"
+		],
+		"name" : "catch"
+	}
+}
