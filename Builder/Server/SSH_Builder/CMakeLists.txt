@@ -10,7 +10,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 add_executable(SSH_Builder src/main.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
-add_executable(SSH_BuilderTests src/tests.cpp)
+add_executable(SSH_BuilderTests src/tests.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -29,13 +29,14 @@ target_link_libraries(SSH_BuilderTests Catch)
 find_package(Boost 1.64.0 COMPONENTS system filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(SSH_Builder ${Boost_LIBRARIES})
+target_link_libraries(SSH_BuilderTests ${Boost_LIBRARIES})
 
 # Add SQLite
 find_package(PkgConfig)
 pkg_search_module(SQLITE3 REQUIRED sqlite3)
 include_directories(${SQLITE3_INCLUDE_DIRS})
 target_link_libraries(SSH_Builder ${SQLITE3_LIBRARIES})
-
+target_link_libraries(SSH_BuilderTests ${SQLITE3_LIBRARIES})
 
 install(TARGETS SSH_Builder DESTINATION bin)
 install(TARGETS SSH_BuilderTests DESTINATION bin)

@@ -27,7 +27,7 @@
 
 namespace builder {
   // Compile time constants
-  constexpr auto gBuilderBase = "SingularityBuilder";
+  constexpr auto gBuilderBase = "BuilderRun";
   constexpr auto gScpBase = "scp";
   constexpr auto gBuilderWorkPath = "/home/builder/container_scratch/";
   constexpr auto gGetWorkPath = "GetWorkPath";
