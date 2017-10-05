@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fstack-protector-strong -D_FORTIFY_SOURCE=2")
 
 add_executable(SSH_Builder src/main.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
 add_executable(SSH_BuilderTests src/tests.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
