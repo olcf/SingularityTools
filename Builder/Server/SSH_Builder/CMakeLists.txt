@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fstack-protector-strong -D_FORTIFY_SOURCE=2")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -fpie -Wl,-z,noexecstack,-z,now,-z,relo,-z,nodlopen")
 
 add_executable(SSH_Builder src/main.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
 add_executable(SSH_BuilderTests src/tests.cpp src/signal_handler.cpp src/ssh_sanitizer.cpp src/singularity_builder.cpp)
@@ -12,9 +12,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Setup Tests
 set_target_properties(SSH_BuilderTests
-                      PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DDEBUG=1 -fsanitize=undefined -fno-omit-frame-pointer -fsanitize=address")
+                      PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DDEBUG=1 -fsanitize=address,undefined -fno-omit-frame-pointer")
 set_target_properties(SSH_BuilderTests
-                      PROPERTIES LINK_FLAGS "${LINK_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer -fsanitize=address")
+                      PROPERTIES LINK_FLAGS "${LINK_FLAGS} -fsanitize=address,undefined -fno-omit-frame-pointer")
 
 # Includes Catch
 # The catch project will fetch the headers from github at build time
