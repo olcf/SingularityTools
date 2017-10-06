@@ -16,8 +16,8 @@
 // the SSH_CONNECTION info is used as a unique identifier to ensure users only have very limited access
 
 // The following commands are allowed:
-// scp -t unique_work_path()/container.def
-// scp -f unique_work_path()/container.name
+// scp -t container.def
+// scp -f container.img
 // BuilderPrep
 // BuilderRun
 // BuilderCleanup
@@ -27,19 +27,18 @@
 
 namespace builder {
   // Compile time constants
-  constexpr auto gBuilderBase = "BuilderRun";
-  constexpr auto gScpBase = "scp";
+  constexpr auto gScpTo = "scp -t container.def";
+  constexpr auto gScpFrom = "scp -f container.img"
   constexpr auto gBuilderWorkPath = "/home/builder/container_scratch/";
-  constexpr auto gGetWorkPath = "GetWorkPath";
   constexpr auto gBuilderPrep = "BuilderPrep";
   constexpr auto gBuilderRun = "BuilderRun";
   constexpr auto gBuilderCleanup = "BuilderCleanup";
 
-   // Split the command passed to SSH_Sanitizer, on spaces, into a vector of strings
-  static std::vector<std::string> get_command(int argc, char **argv) {
+   // Sanitize the command to be run
+  static std::string get_command(int argc, char **argv) {
     // A single string argument is required
     if(argc != 2) {
-      throw std::system_error(EINVAL, std::generic_category(), "Invalid number of SSH arguments");
+      throw std::system_error(EINVAL, std::generic_category(), "Invalid number of SSH_Builder arguments");
     }
 
     // Create string from char* argument
@@ -49,17 +48,14 @@ namespace builder {
     std::string invalid_chars("!%^*~|;(){}[]$#\\");
     for(char c : invalid_chars) {
       if(command.find(c) != std::string::npos) {
-        throw std::system_error(EINVAL, std::generic_category(), "invalid SSH command characters");
+        throw std::system_error(EINVAL, std::generic_category(), "invalid SSH_Builder argument characters");
       }
     }
 
     // Remove any leading/trailing white space
     boost::trim(command);
 
-    // Split the string command on space(s) or tab(s)
-    std::vector<std::string> split_command;
-    boost::split(split_command, command, boost::is_any_of("\t "), boost::token_compress_on);
-    return split_command;
+    return command;
   }
 
 
@@ -117,6 +113,12 @@ namespace builder {
     bp::environment env;   // Blank environment env
     int return_code;
 
+    // In debug mode simply print the statement to be executed
+    #ifdef DEBUG
+      std::cout<<command;
+      return 0;
+    #endif
+
     // Launch the command asynchronously
     bp::child child_proc(command, env);
 
@@ -138,9 +140,10 @@ namespace builder {
 
   // Create the unique working directory where the definition and final image will be stored
   int SSH_Sanitizer::run_builder_prep() {
-    if(command.size() != 1) {
-      throw std::system_error(EINVAL, std::generic_category(), "invalid argument count for GetWorkPath");
-    }
+    #ifdef DEBUG
+    std::cout<<"mkdir " << this->unique_work_path;
+    return 0;
+    #endif
 
     boost::filesystem::create_directories(this->unique_work_path);
     return 0;
@@ -148,9 +151,10 @@ namespace builder {
 
   // Build the container
   int SSH_Sanitizer::run_builder() {
-    if(command.size() != 1) {
-      throw std::system_error(EINVAL, std::generic_category(), "invalid argument count for GetWorkPath");
-    }
+    #ifdef DEBUG
+    std::cout<<"builder.build()";
+    return 0;
+    #endif
 
     SingularityBuilder builder(this->unique_work_path, this->unique_id);
     int err = builder.build();
@@ -159,9 +163,10 @@ namespace builder {
 
   // Remove the unique working directory
   int SSH_Sanitizer::run_builder_cleanup() {
-    if(command.size() != 1) {
-      throw std::system_error(EINVAL, std::generic_category(), "invalid argument count for BuilderCleanup");
-    }
+    #ifdef DEBUG
+    std::cout<<"rm " << this->unique_work_path;
+    return 0;
+    #endif
 
     boost::filesystem::remove_all(this->unique_work_path);
     return 0;
@@ -173,33 +178,21 @@ namespace builder {
   // scp -f container.img -> scp -f unique_work_path/container.img
   // Upon transfering the definition to the builder we create the unique directory and kick off the build process
   // Upon transfering the final image to the client we delete the unique work directory o nthe builder 
-  int SSH_Sanitizer::run_scp(const std::vector<std::string>& command) {
-    // Check number of arguments
-    if(command.size() != 3) {
-      throw std::system_error(EINVAL, std::generic_category(), "scp");
-    }
-
-    int err;
-    if(command[1] == "-t") {
-      // Initiate SCP "to" the builder
-      std::string scp_call{gScpBase};
-      scp_call += " -t " + unique_work_path + "/container.def";
-      err = blocking_exec(scp_call);
-      std::cout<<"scp err: "<<err<<std::endl;
-      if(err)
-        return err;
-    } 
-    else if(command[1] == "-f") {
-      // Initiate SCP "from" the builder
-      std::string scp_call{gScpBase};
-      scp_call += " -f " + unique_work_path + "/container.img";
-      err = blocking_exec(scp_call);
-    }
-    else {
-      throw std::system_error(EINVAL, std::generic_category(), "scp");
-    }
+  int SSH_Sanitizer::run_scp_to() {
+    // Initiate SCP "to" the builder
+    std::string scp_call;
+    scp_call += "scp -t " + unique_work_path + "/container.def";
+    int err = blocking_exec(scp_call);
     return err;
   }
+  int SSH_Sanitizer::run_scp_from() {
+    // Initiate SCP "from" the builder
+    std::string scp_call;
+    scp_call += "scp -f " + unique_work_path + "/container.img";
+    int err = blocking_exec(scp_call);
+    return err;
+  }
+
 
   // Attempt to run provided command if it's allowed
   int SSH_Sanitizer::sanitized_run() {
@@ -207,8 +200,11 @@ namespace builder {
 
     std::string base_command = command[0];
 
-    if(base_command == gScpBase){
-      err = run_scp(command);
+    if(base_command == gScpTo){
+      err = run_scp_to();
+    }
+    else if(base_command == gScpFrom){
+      err = run_scp_from();
     }
     else if(base_command == gBuilderPrep) {
       err = run_builder_prep();
