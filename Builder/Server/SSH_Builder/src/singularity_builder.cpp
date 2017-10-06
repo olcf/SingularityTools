@@ -12,7 +12,7 @@
 
 namespace builder {
   constexpr bool NO_THROW = false;
-  constexpr auto gDatabase = "Builder";
+  constexpr auto gDatabase = "/home/builder/Builder.db";
 
   // Stop the docker container
   // Note: docker rm should be called once the container is stopped
@@ -157,7 +157,7 @@ namespace builder {
   // Open the database
   static void db_init(sqlite3** db) {
     int db_rc;
-    db_rc = sqlite3_open(gDatabase, db);
+    db_rc = sqlite3_open_v2(gDatabase, db, SQLITE_OPEN_READWRITE, NULL);
     if(db_rc != SQLITE_OK) {
       throw std::system_error(ECONNABORTED, std::generic_category(), sqlite3_errmsg(*db));
     }
