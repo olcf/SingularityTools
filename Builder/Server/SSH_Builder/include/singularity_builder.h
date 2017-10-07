@@ -25,7 +25,7 @@ namespace builder {
     void enter_queue();
     void exit_queue(bool should_throw);
     bool first_in_queue();
-    void reserve_build_spot();
+    bool reserve_build_spot();
     void release_build_spot(bool should_throw);
     void remove_vagrant_vm();
 

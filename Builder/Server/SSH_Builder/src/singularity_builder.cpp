@@ -135,12 +135,12 @@ namespace builder {
   }
 
   // Decrement the number of active build
-  static void release_build_spot(bool should_throw=true) {
+  void SingularityBuilder::release_build_spot(bool should_throw=true) {
     char *db_err = NULL;
 
     std::string SQL_insert;
     SQL_insert += "UPDATE active_builds SET count = count - 1 WHERE id = 1;";
-    int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
+    int rc = sqlite3_exec(this->db, SQL_insert.c_str(), NULL, NULL, &db_err);
     if(rc != SQLITE_OK && should_throw) {
       std::string err(db_err);
       sqlite3_free(db_err);
@@ -159,7 +159,7 @@ namespace builder {
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 
     // Read the number of active VMs
-    int active_vm_count
+    int active_vm_count;
     std::string SQL_fetch("SELECT count FROM active_builds LIMIT 1;");
     int rc = sqlite3_exec(this->db, SQL_fetch.c_str(), active_count_callback, &active_vm_count, &db_err);
     if(rc != SQLITE_OK) {
@@ -173,8 +173,8 @@ namespace builder {
     if(active_vm_count < MAX_VM_COUNT) {
       active_vm_count++;
       std::string SQL_insert;
-      SQL_insert += "UPDATE active_builds set count = " + active_vm_count + " WHERE id = 1;";
-      int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
+      SQL_insert += "UPDATE active_builds set count = " + std::to_string(active_vm_count) + " WHERE id = 1;";
+      int rc = sqlite3_exec(this->db, SQL_insert.c_str(), NULL, NULL, &db_err);
       if(rc != SQLITE_OK) {
         std::string err(db_err);
         sqlite3_free(db_err);
@@ -198,7 +198,7 @@ namespace builder {
     }
   }
 
-  SingularityBuilder::SingularityBuilder(std::string work_path) : has_build_spot(false},
+  SingularityBuilder::SingularityBuilder(std::string work_path) : has_build_spot{false},
                                                                   work_path{work_path}
   {
     db_init(&(this->db));
