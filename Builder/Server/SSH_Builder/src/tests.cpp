@@ -11,7 +11,13 @@ using Catch::Equals;
 static void capture_stdout(std::function<void()>func, std::string& std_out) {
   std::stringstream buffer;
   std::streambuf * old_buffer = std::cout.rdbuf(buffer.rdbuf());
+  try {
   func();
+  } catch(...) {
+    std::cout<<buffer.str();
+    std::cout.rdbuf(old_buffer);
+    throw;
+  }
   std_out = buffer.str();
   std::cout.rdbuf(old_buffer);
 }
@@ -56,10 +62,10 @@ TEST_CASE("SSH_Sanitizer(argc, argv) will throw if SSH_CONNECTION is incorrectly
   REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("SSH_CONNECTION"));
 }
 
-TEST_CASE("SSH_Sanitizer Should allow scp -t foo") {
+TEST_CASE("SSH_Sanitizer Should allow scp -t container.def") {
   setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12 131415", 1);
   int new_argc = 2;
-  const char *cnew_argv[] = {"SSH_Sanitizer", "scp -t foo"};
+  const char *cnew_argv[] = {"SSH_Sanitizer", "scp -t container.def"};
   char ** new_argv = (char**)cnew_argv;
   builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
@@ -69,10 +75,10 @@ TEST_CASE("SSH_Sanitizer Should allow scp -t foo") {
 
 }
 
-TEST_CASE("SSH_Sanitizer Should allow scp -f bar") {
+TEST_CASE("SSH_Sanitizer Should allow scp -f container.img") {
   setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12 131415", 1);
   int new_argc = 2;
-  const char *cnew_argv[] = {"SSH_Sanitizer", "scp -f bar"};
+  const char *cnew_argv[] = {"SSH_Sanitizer", "scp -f container.img"};
   char ** new_argv = (char**)cnew_argv;
   builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
@@ -87,7 +93,6 @@ TEST_CASE("SSH_Sanitizer Should allow BuilderPrep") {
   const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderPrep"};
   char ** new_argv = (char**)cnew_argv;
   builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
-  REQUIRE_NOTHROW(ssh_builder.sanitized_run());
 
   std::string std_out;
   REQUIRE_NOTHROW(capture_stdout([&]() { ssh_builder.sanitized_run(); }, std_out));
@@ -100,7 +105,6 @@ TEST_CASE("SSH_Sanitizer Should allow BuilderRun") {
   const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderRun"};
   char ** new_argv = (char**)cnew_argv;
   builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
-  REQUIRE_NOTHROW(ssh_builder.sanitized_run());
 
   std::string std_out;
   REQUIRE_NOTHROW(capture_stdout([&]() { ssh_builder.sanitized_run(); }, std_out));
@@ -113,7 +117,6 @@ TEST_CASE("SSH_Sanitizer Should allow BuilderCleanup") {
   const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderCleanup"};
   char ** new_argv = (char**)cnew_argv;
   builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
-  REQUIRE_NOTHROW(ssh_builder.sanitized_run());
 
   std::string std_out;
   REQUIRE_NOTHROW(capture_stdout([&]() { ssh_builder.sanitized_run(); }, std_out));
