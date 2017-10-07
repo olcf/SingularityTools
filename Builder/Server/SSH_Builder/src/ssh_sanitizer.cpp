@@ -28,7 +28,7 @@
 namespace builder {
   // Compile time constants
   constexpr auto gScpTo = "scp -t container.def";
-  constexpr auto gScpFrom = "scp -f container.img"
+  constexpr auto gScpFrom = "scp -f container.img";
   constexpr auto gBuilderWorkPath = "/home/builder/container_scratch/";
   constexpr auto gBuilderPrep = "BuilderPrep";
   constexpr auto gBuilderRun = "BuilderRun";
@@ -156,7 +156,7 @@ namespace builder {
     return 0;
     #endif
 
-    SingularityBuilder builder(this->unique_work_path, this->unique_id);
+    SingularityBuilder builder(this->unique_work_path);
     int err = builder.build();
     return err;
   }
@@ -198,21 +198,19 @@ namespace builder {
   int SSH_Sanitizer::sanitized_run() {
     int err;
 
-    std::string base_command = command[0];
-
-    if(base_command == gScpTo){
+    if(command == gScpTo){
       err = run_scp_to();
     }
-    else if(base_command == gScpFrom){
+    else if(command == gScpFrom){
       err = run_scp_from();
     }
-    else if(base_command == gBuilderPrep) {
+    else if(command == gBuilderPrep) {
       err = run_builder_prep();
     }
-    else if(base_command == gBuilderRun) {
+    else if(command == gBuilderRun) {
       err = run_builder();
     }
-    else if(base_command == gBuilderCleanup) {
+    else if(command == gBuilderCleanup) {
       err = run_builder_cleanup();
     }
     else {

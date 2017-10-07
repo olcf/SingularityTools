@@ -10,49 +10,73 @@
 #include "sqlite3.h"
 #include "signal_handler.h"
 
+// TODO: MAKE THIS SET IN BUILD
+#define MAX_VM_COUNT 4
+
 namespace builder {
   constexpr bool NO_THROW = false;
   constexpr auto gDatabase = "/home/builder/Builder.db";
 
-  // Stop the docker container
+  // Stop the vagrant VM
   // Note: docker rm should be called once the container is stopped
   // This command is blocking
-  void SingularityBuilder::stop_docker_build() {
-    std::cerr<<"Attempting to kill docker..."<<std::endl;
+  void SingularityBuilder::stop_vagrant_build() {
+    std::cerr<<"Attempting to kill Vagrant..."<<std::endl;
     std::string stop_command;
-    stop_command += "docker stop " + this->docker_container_name;
+    stop_command += "vagrant destroy ";
     boost::process::system(stop_command);
   }
 
-  // Execute a docker run command
+  // TODO: SPLIT THIS INTO TWO FUNCTIONS
+
+  // Execute command in vagrant VM
   // Docker has wonky signal handling so
   // docker stop {container_name} must be used
-  int SingularityBuilder::docker_build() {
+  int SingularityBuilder::vagrant_build() {
     namespace bp = boost::process;
 
-    std::string docker_command;
-    docker_command += "docker run --device=" + this->loop_device() + " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
-                       + this->docker_container_name + " -mount type=bind,source=" + this->work_path
-                       + ",destination=/work_dir -w /work_dir singularity_builder";
+    std::string vagrant_up_command;
+    vagrant_up_command += "vagrant up";
 
     // Launch the command asynchronously
-    bp::child docker_proc(docker_command);
+    bp::child vagrant_proc(vagrant_up_command);
 
-    // Test if we should stop docker
-    while(docker_proc.running()) {
+    // Test if we should stop vagrant
+    while(vagrant_proc.running()) {
       if(gShouldKill) {
-        this->stop_docker_build();
+        this->stop_vagrant_build();
       }
     }
 
-    // Wait for docker to complete
-    docker_proc.wait();
-    int return_code = docker_proc.exit_code();
+    // Wait for vagrant to complete bool
+    vagrant_proc.wait();
+    int return_code = vagrant_proc.exit_code();
+
+    // If we failed to boot the VM bail out
+    if(return_code != 0)
+      return return_code;
+
+    std::string vagrant_build_command;
+    vagrant_build_command += "vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'";
+
+    // Launch the command asynchronously
+    bp::child vagrant_proc_build(vagrant_build_command);
+
+    // Test if we should stop vagrant
+    while(vagrant_proc_build.running()) {
+      if(gShouldKill) {
+        this->stop_vagrant_build();
+      }
+    }
+
+    // Wait for vagrant to complete bool
+    vagrant_proc_build.wait();
+    return_code = vagrant_proc_build.exit_code();
 
     return return_code;
   }
   
-  // Enter a new job into the queue
+  // Enter a new build into the queue
   void SingularityBuilder::enter_queue() {
     char *db_err = NULL;
     std::string SQL_command;
@@ -97,61 +121,72 @@ namespace builder {
     return first_in_queue == job_id;
   }
 
-  // Reserve a valid loop device id if possible, or -1 if no device is available
-  static int reserve_loop_id_callback(void *loop_id, int count, char** values, char** names) {
-    *static_cast<int*>(loop_id) = std::stoi(std::string(values[0]));
+  void SingularityBuilder::remove_vagrant_vm() {
+    std::string rm_command;
+    rm_command += "vagrant destroy";
+    boost::process::system(rm_command);
+  }
 
+  // If active VM count < MAX_VM_COUNT incriment VM count and return true
+  // Reserve a valid loop device id if possible, or -1 if no device is available
+  static int active_count_callback(void *active_vm_count, int count, char** values, char** names) {
+    *static_cast<int*>(active_vm_count) = std::stoi(std::string(values[0]));
     return 0;
   }
-  void SingularityBuilder::reserve_loop_id() {
+
+  // Decrement the number of active build
+  static void release_build_spot(bool should_throw=true) {
     char *db_err = NULL;
 
-    // Begin transaction
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-
-    // Retrive a loop device id if possible
-    std::string SQL_fetch;
-    SQL_fetch = "SELECT loop_id FROM available_loops LIMIT 1;";
-    int rc = sqlite3_exec(this->db, SQL_fetch.c_str(), reserve_loop_id_callback, &(this->loop_id), &db_err);
-    if(rc != SQLITE_OK) {
+    std::string SQL_insert;
+    SQL_insert += "UPDATE active_builds SET count = count - 1 WHERE id = 1;";
+    int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
+    if(rc != SQLITE_OK && should_throw) {
       std::string err(db_err);
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
-    }
-
-    // Remove the loop device id from available devices
-    if(this->loop_id_valid()) {
-      std::string SQL_remove;
-      SQL_remove = "DELETE FROM available_loops WHERE loop_id = " + std::to_string(loop_id) + ";";
-      int rc = sqlite3_exec(this->db, SQL_remove.c_str(), NULL, NULL, &db_err);
-      if(rc != SQLITE_OK) {
-        std::string err(db_err);
-        sqlite3_free(db_err);
-        throw std::system_error(ECONNABORTED, std::generic_category(), err);
-      }
     }
 
     // End transaction
     sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
   }
 
-  // Release a loop id back to the pool of available devices
-  void SingularityBuilder::release_loop_id(bool should_throw=true) {
+  // Reserve a build spot if one is available, return true if reserved else return false
+  bool SingularityBuilder::reserve_build_spot() {
     char *db_err = NULL;
-    std::string SQL_command;
-    SQL_command += "INSERT INTO available_loops(loop_id) VALUES(" + std::to_string(this->loop_id) + ");";
-    int rc = sqlite3_exec(this->db, SQL_command.c_str(), reserve_loop_id_callback, &loop_id, &db_err);
-    if(rc != SQLITE_OK && should_throw) {
+
+    // Begin transaction
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+
+    // Read the number of active VMs
+    int active_vm_count
+    std::string SQL_fetch("SELECT count FROM active_builds LIMIT 1;");
+    int rc = sqlite3_exec(this->db, SQL_fetch.c_str(), active_count_callback, &active_vm_count, &db_err);
+    if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
-  }
 
-  void SingularityBuilder::remove_docker_container() {
-    std::string rm_command;
-    rm_command += "docker rm " + this->docker_container_name;
-    boost::process::system(rm_command);
+    // If there is space reserve a spot
+    bool reserved_spot = false;
+    if(active_vm_count < MAX_VM_COUNT) {
+      active_vm_count++;
+      std::string SQL_insert;
+      SQL_insert += "UPDATE active_builds set count = " + active_vm_count + " WHERE id = 1;";
+      int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
+      if(rc != SQLITE_OK) {
+        std::string err(db_err);
+        sqlite3_free(db_err);
+        throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      }
+      reserved_spot = true;
+    }
+    // End transaction
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
+
+    // Update objects build spot status
+    this->has_build_spot = reserved_spot;
   }
 
   // Open the database
@@ -163,58 +198,44 @@ namespace builder {
     }
   }
 
-  SingularityBuilder::SingularityBuilder(std::string work_path,
-                                         std::string docker_container_name) : loop_id{-1},
-                                                                              work_path{work_path},
-                                                                              docker_container_name{docker_container_name}
+  SingularityBuilder::SingularityBuilder(std::string work_path) : has_build_spot(false},
+                                                                  work_path{work_path}
   {
     db_init(&(this->db));
   }
 
   SingularityBuilder::~SingularityBuilder() {
     // Remove job from queue
+    // We probably could only run this if the job is infact queued
     this->exit_queue(NO_THROW);
 
-    // Add loop device back to pool
-    if(this->loop_id_valid())
-      this->release_loop_id(NO_THROW);
+    // Release the job spot if one has been reserved
+    if(this->has_build_spot) {
+      release_build_spot(NO_THROW);
+    }
 
-    // Remove the docker container
-    this->remove_docker_container();
+    // Remove the vagrant vm
+    this->remove_vagrant_vm();
 
     // Close database
     sqlite3_close(db);
   }
 
-  bool SingularityBuilder::loop_id_valid() {
-    return this->loop_id >= 0;
-  }
-
-  std::string SingularityBuilder::loop_device() {
-    if(this->loop_id_valid()) {
-      std::string loop_device;
-      loop_device += "/dev/loop" + std::to_string(this->loop_id);
-      return loop_device;
-    } else {
-        throw std::system_error(ENXIO, std::generic_category(), "No valid loop device reserved");
-    }
-  }
-
   int SingularityBuilder::build() {
-    // Enter job request into queue
+    // Enter build request into queue
     enter_queue();
 
-    // Wait in queue for a loop device to become available
-    while(!this->loop_id_valid()) {
+    // Wait in queue for a build spot to open up
+    while(!this->has_build_spot) {
       if(this->first_in_queue()) {
-        this->reserve_loop_id();
-        if(this->loop_id_valid())
+        this->reserve_build_spot();
+        if(this->has_build_spot)
           this->exit_queue();
       }
     }
 
-    // Once a loop device is available execute the build command
-    int err = this->docker_build();
+    // Once a build spot is available spin up the vm and execute the build command
+    int err = this->vagrant_build();
     return err;
   }
 }

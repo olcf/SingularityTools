@@ -8,7 +8,7 @@ namespace builder {
 
   public:
     // Constructors
-    SingularityBuilder(std::string work_path, std::string docker_container_name);
+    SingularityBuilder(std::string work_path);
     ~SingularityBuilder();
     SingularityBuilder()                                     = delete;
     SingularityBuilder(const SingularityBuilder&)            = delete;
@@ -20,21 +20,17 @@ namespace builder {
     int build();
 
   private:
-    int docker_build();
-    void stop_docker_build();
+    int vagrant_build();
+    void stop_vagrant_build();
     void enter_queue();
     void exit_queue(bool should_throw);
     bool first_in_queue();
-    void reserve_loop_id();
-    void release_loop_id(bool should_throw);
-    bool loop_id_valid();
-    std::string loop_device();
-    void remove_docker_container();
+    void reserve_build_spot();
+    void release_build_spot(bool should_throw);
+    void remove_vagrant_vm();
 
     sqlite3 *db;
-    int loop_id;
+    bool has_build_spot;
     const std::string work_path;
-    const std::string job_id;
-    const std::string docker_container_name;
   };
 }

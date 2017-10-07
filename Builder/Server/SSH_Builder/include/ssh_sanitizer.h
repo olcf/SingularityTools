@@ -36,7 +36,8 @@ namespace builder {
     int sanitized_run();
 
   private:
-    int run_scp(const std::vector<std::string>& split_command);
+    int run_scp_to();
+    int run_scp_from();
     int run_builder_prep();
     int run_builder();
     int run_builder_cleanup();
@@ -44,6 +45,6 @@ namespace builder {
 
     std::string unique_id;
     std::string unique_work_path;
-    std::vector<std::string> command;
+    std::string command;
   };
 }
