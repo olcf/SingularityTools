@@ -8,7 +8,7 @@ namespace builder {
 
   public:
     // Constructors
-    SingularityBuilder(std::string work_path);
+    SingularityBuilder(std::string work_path, std::string build_id);
     ~SingularityBuilder();
     SingularityBuilder()                                     = delete;
     SingularityBuilder(const SingularityBuilder&)            = delete;
@@ -21,16 +21,16 @@ namespace builder {
 
   private:
     int vagrant_build();
-    void stop_vagrant_build();
+    int vagrant_up();
     void enter_queue();
     void exit_queue(bool should_throw);
     bool first_in_queue();
     bool reserve_build_spot();
     void release_build_spot(bool should_throw);
-    void remove_vagrant_vm();
 
     sqlite3 *db;
     bool has_build_spot;
     const std::string work_path;
+    const std::string build_id;
   };
 }

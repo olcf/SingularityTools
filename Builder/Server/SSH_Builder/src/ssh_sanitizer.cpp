@@ -156,7 +156,7 @@ namespace builder {
     return 0;
     #endif
 
-    SingularityBuilder builder(this->unique_work_path);
+    SingularityBuilder builder(this->unique_work_path, this->unique_id);
     int err = builder.build();
     return err;
   }

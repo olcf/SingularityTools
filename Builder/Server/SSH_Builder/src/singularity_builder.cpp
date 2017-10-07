@@ -16,25 +16,18 @@
 namespace builder {
   constexpr bool NO_THROW = false;
   constexpr auto gDatabase = "/home/builder/Builder.db";
+ 
+   namespace bp = boost::process;
 
-  // Stop the vagrant VM
-  // Note: docker rm should be called once the container is stopped
-  // This command is blocking
-  void SingularityBuilder::stop_vagrant_build() {
-    std::cerr<<"Attempting to kill Vagrant..."<<std::endl;
-    std::string stop_command;
-    stop_command += "vagrant destroy ";
+  // Stop the vagrant VM and remove it
+  static void vagrant_destroy() {
+    std::cerr<<"Attempting to destroy VM..."<<std::endl;
+    std::string stop_command("vagrant destroy");
     boost::process::system(stop_command);
   }
 
-  // TODO: SPLIT THIS INTO TWO FUNCTIONS
-
-  // Execute command in vagrant VM
-  // Docker has wonky signal handling so
-  // docker stop {container_name} must be used
-  int SingularityBuilder::vagrant_build() {
-    namespace bp = boost::process;
-
+  // Fire up the VM
+  int SingularityBuilder::vagrant_up() {
     std::string vagrant_up_command;
     vagrant_up_command += "vagrant up";
 
@@ -44,20 +37,18 @@ namespace builder {
     // Test if we should stop vagrant
     while(vagrant_proc.running()) {
       if(gShouldKill) {
-        this->stop_vagrant_build();
+        vagrant_destroy();
       }
     }
 
     // Wait for vagrant to complete bool
     vagrant_proc.wait();
-    int return_code = vagrant_proc.exit_code();
+    return vagrant_proc.exit_code();
+  }
 
-    // If we failed to boot the VM bail out
-    if(return_code != 0)
-      return return_code;
-
-    std::string vagrant_build_command;
-    vagrant_build_command += "vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'";
+  // Run singularity build within our vagrant container
+  int SingularityBuilder::vagrant_build() {
+    std::string vagrant_build_command("vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'");
 
     // Launch the command asynchronously
     bp::child vagrant_proc_build(vagrant_build_command);
@@ -65,22 +56,20 @@ namespace builder {
     // Test if we should stop vagrant
     while(vagrant_proc_build.running()) {
       if(gShouldKill) {
-        this->stop_vagrant_build();
+        vagrant_destroy();
       }
     }
 
     // Wait for vagrant to complete bool
     vagrant_proc_build.wait();
-    return_code = vagrant_proc_build.exit_code();
-
-    return return_code;
+    return vagrant_proc_build.exit_code();
   }
   
   // Enter a new build into the queue
   void SingularityBuilder::enter_queue() {
     char *db_err = NULL;
     std::string SQL_command;
-    SQL_command += "INSERT INTO build_queue(job_id) VALUES(" + this->job_id + ");";
+    SQL_command += "INSERT INTO build_queue(build_id) VALUES(" + this->build_id + ");";
     int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
     if(rc != SQLITE_OK) {
       std::string err(db_err);
@@ -89,11 +78,11 @@ namespace builder {
     }
   }
 
-  // Remove a job from the queue
+  // Remove a build from the queue
   void SingularityBuilder::exit_queue(bool should_throw=true) {
     char *db_err = NULL;
     std::string SQL_command;
-    SQL_command += "DELETE FROM build_queue WHERE job_id = " + this->job_id + ";";
+    SQL_command += "DELETE FROM build_queue WHERE build_id = " + this->build_id + ";";
     int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
     if(rc != SQLITE_OK && should_throw) {
       std::string err(db_err);
@@ -102,7 +91,7 @@ namespace builder {
     }
   }
 
-  // Return true if the specified job is at the top of the queue
+  // Return true if the specified build is at the top of the queue
   static int first_in_queue_callback(void *first_in_queue, int count, char** values, char** names) {
     *static_cast<std::string*>(first_in_queue) = values[0];
     return 0;
@@ -111,20 +100,14 @@ namespace builder {
     char *db_err = NULL;
     std::string first_in_queue;
     std::string SQL_command;
-    SQL_command += "SELECT job_id FROM build_queue ORDER BY id ASC LIMIT 1;";
+    SQL_command += "SELECT build_id FROM build_queue ORDER BY id ASC LIMIT 1;";
     int rc = sqlite3_exec(this->db, SQL_command.c_str(), first_in_queue_callback, &first_in_queue, &db_err);
     if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
-    return first_in_queue == job_id;
-  }
-
-  void SingularityBuilder::remove_vagrant_vm() {
-    std::string rm_command;
-    rm_command += "vagrant destroy";
-    boost::process::system(rm_command);
+    return first_in_queue == build_id;
   }
 
   // If active VM count < MAX_VM_COUNT incriment VM count and return true
@@ -198,24 +181,24 @@ namespace builder {
     }
   }
 
-  SingularityBuilder::SingularityBuilder(std::string work_path) : has_build_spot{false},
-                                                                  work_path{work_path}
+  SingularityBuilder::SingularityBuilder(std::string work_path, std::string build_id) : has_build_spot{false},
+                                                                                        work_path{work_path},
+                                                                                        build_id{build_id}
   {
     db_init(&(this->db));
   }
 
   SingularityBuilder::~SingularityBuilder() {
-    // Remove job from queue
-    // We probably could only run this if the job is infact queued
+    // Remove build from queue
+    // We probably could only run this if the build is infact queued
     this->exit_queue(NO_THROW);
 
-    // Release the job spot if one has been reserved
-    if(this->has_build_spot) {
+    // Release the build spot if one has been reserved
+    if(this->has_build_spot)
       release_build_spot(NO_THROW);
-    }
 
     // Remove the vagrant vm
-    this->remove_vagrant_vm();
+    vagrant_destroy();
 
     // Close database
     sqlite3_close(db);
@@ -235,7 +218,10 @@ namespace builder {
     }
 
     // Once a build spot is available spin up the vm and execute the build command
-    int err = this->vagrant_build();
+    int err = this->vagrant_up();
+    if(!err)
+      err = this->vagrant_build();
+
     return err;
   }
 }
