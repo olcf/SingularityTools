@@ -17,7 +17,7 @@ namespace builder {
   constexpr bool NO_THROW = false;
   constexpr auto gDatabase = "/home/builder/Builder.db";
  
-   namespace bp = boost::process;
+  namespace bp = boost::process;
 
   // Stop the vagrant VM and remove it
   static void vagrant_destroy() {
@@ -168,8 +168,9 @@ namespace builder {
     // End transaction
     sqlite3_exec(db, "END TRANSACTION", NULL, NULL, NULL);
 
-    // Update objects build spot status
     this->has_build_spot = reserved_spot;
+
+    return reserved_spot;
   }
 
   // Open the database
