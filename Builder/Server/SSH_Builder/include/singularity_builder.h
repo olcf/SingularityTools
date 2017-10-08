@@ -30,6 +30,8 @@ namespace builder {
 
     sqlite3 *db;
     bool has_build_spot;
+    bool has_active_vagrant_vm;
+    bool in_queue;
     const std::string work_path;
     const std::string build_id;
   };

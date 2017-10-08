@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <functional>
 #include "ssh_sanitizer.h"
+#include "singularity_builder.h"
+#include "sqlite3.h"
+#include <boost/filesystem.hpp>
 
 using Catch::Contains;
 using Catch::Equals;
@@ -22,7 +25,7 @@ static void capture_stdout(std::function<void()>func, std::string& std_out) {
   std::cout.rdbuf(old_buffer);
 }
 
-TEST_CASE("SSH_Sanitizer will only suceed if a single argument is provided") {
+TEST_CASE("SSH_Sanitizer() requires a single argument to be provided") {
   setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12 131415", 1);
 
   SECTION("Providing exactly one argument succeeds") {
@@ -47,7 +50,7 @@ TEST_CASE("SSH_Sanitizer will only suceed if a single argument is provided") {
   }
 }
 
-TEST_CASE("SSH_Sanitizer will throw if SSH_CONNECTION is not set correctly") {
+TEST_CASE("SSH_Sanitizer() requires SSH_CONNECTION to be set correctly") {
   SECTION("an unset SSH_CONNECTION with valid arguments will fail") {
     unsetenv("SSH_CONNECTION");
     int new_argc = 2;
@@ -65,7 +68,7 @@ TEST_CASE("SSH_Sanitizer will throw if SSH_CONNECTION is not set correctly") {
   }
 }
 
-TEST_CASE("SSH_Sanitizer should only allow whitelisted commands") {
+TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands") {
   setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12 131415", 1);
 
   SECTION("scp -t container.def should be allowed") {
@@ -139,5 +142,35 @@ TEST_CASE("SSH_Sanitizer should only allow whitelisted commands") {
     char ** new_argv = (char**)cnew_argv;
 
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("invalid") && Contains("characters"));
+  }
+}
+
+class tmp_db {
+  public:
+    tmp_db() {
+      sqlite3 *db = NULL;
+      int rc;
+      rc = sqlite3_open_v2("Builder.db", &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+      rc |= sqlite3_exec(db,"CREATE TABLE active_builds(id INTEGER PRIMARY KEY, count INTEGER);", NULL, NULL, NULL);
+      rc |= sqlite3_exec(db,"CREATE TABLE build_queue(id INTEGER PRIMARY KEY AUTOINCREMENT, buid_id STRING);", NULL, NULL, NULL);
+      rc |= sqlite3_exec(db,"INSERT INTO active_builds(id, count) VALUES(1, 0);", NULL, NULL, NULL);
+      rc |= sqlite3_close(db);
+
+      if(rc != SQLITE_OK) {
+        throw std::system_error(ECONNABORTED, std::generic_category(), "Failed to create tmp_db for testing");
+      }
+    }
+    ~tmp_db() {
+      boost::filesystem::remove_all("./Builder.db");
+    }
+};
+
+TEST_CASE("SingularityBuilder() can be constructed if Builder.db SQLite db exists") {
+  std::string work_path("/some/work/path");
+  std::string build_id("1");
+
+  SECTION("if Builder db exists no exception is thrown") {
+    tmp_db db;
+    REQUIRE_NOTHROW(builder::SingularityBuilder(work_path, build_id));
   }
 }

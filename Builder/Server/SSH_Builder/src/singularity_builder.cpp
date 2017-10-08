@@ -15,8 +15,12 @@
 
 namespace builder {
   constexpr bool NO_THROW = false;
-  constexpr auto gDatabase = "/home/builder/Builder.db";
- 
+  #ifdef DEBUG
+    constexpr auto gDatabase = "./Builder.db";
+  #else
+    constexpr auto gDatabase = "/home/builder/Builder.db";
+  #endif 
+
   namespace bp = boost::process;
 
   // Stop the vagrant VM and remove it
@@ -43,7 +47,11 @@ namespace builder {
 
     // Wait for vagrant to complete bool
     vagrant_proc.wait();
-    return vagrant_proc.exit_code();
+    int rc = vagrant_proc.exit_code();
+    if(rc == 0)
+      this->has_active_vagrant_vm = true;
+
+    return rc;
   }
 
   // Run singularity build within our vagrant container
@@ -76,6 +84,7 @@ namespace builder {
       sqlite3_free(db_err);
       throw std::system_error(ECONNABORTED, std::generic_category(), err);
     }
+    this->in_queue = true;
   }
 
   // Remove a build from the queue
@@ -84,11 +93,15 @@ namespace builder {
     std::string SQL_command;
     SQL_command += "DELETE FROM build_queue WHERE build_id = " + this->build_id + ";";
     int rc = sqlite3_exec(this->db, SQL_command.c_str(), NULL, NULL, &db_err);
-    if(rc != SQLITE_OK && should_throw) {
+    if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
-      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      if(should_throw)
+        throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      else
+        std::cerr<<"Error: " << err << std::endl;
     }
+    this->in_queue = false;
   }
 
   // Return true if the specified build is at the top of the queue
@@ -124,10 +137,13 @@ namespace builder {
     std::string SQL_insert;
     SQL_insert += "UPDATE active_builds SET count = count - 1 WHERE id = 1;";
     int rc = sqlite3_exec(this->db, SQL_insert.c_str(), NULL, NULL, &db_err);
-    if(rc != SQLITE_OK && should_throw) {
+    if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
-      throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      if(should_throw)
+        throw std::system_error(ECONNABORTED, std::generic_category(), err);
+      else
+        std::cerr<<"Error: " << err << std::endl;
     }
 
     // End transaction
@@ -175,14 +191,16 @@ namespace builder {
 
   // Open the database
   static void db_init(sqlite3** db) {
-    int db_rc;
-    db_rc = sqlite3_open_v2(gDatabase, db, SQLITE_OPEN_READWRITE, NULL);
+    int db_rc = sqlite3_open_v2(gDatabase, db, SQLITE_OPEN_READWRITE, NULL);
     if(db_rc != SQLITE_OK) {
-      throw std::system_error(ECONNABORTED, std::generic_category(), sqlite3_errmsg(*db));
+      sqlite3_close(*db);
+      throw std::system_error(ECONNABORTED, std::generic_category(), "Failed to init database");
     }
   }
 
   SingularityBuilder::SingularityBuilder(std::string work_path, std::string build_id) : has_build_spot{false},
+                                                                                        has_active_vagrant_vm{false},
+                                                                                        in_queue{false},
                                                                                         work_path{work_path},
                                                                                         build_id{build_id}
   {
@@ -192,17 +210,21 @@ namespace builder {
   SingularityBuilder::~SingularityBuilder() {
     // Remove build from queue
     // We probably could only run this if the build is infact queued
-    this->exit_queue(NO_THROW);
+    if(this->in_queue)
+      this->exit_queue(NO_THROW);
 
     // Release the build spot if one has been reserved
     if(this->has_build_spot)
       release_build_spot(NO_THROW);
 
     // Remove the vagrant vm
-    vagrant_destroy();
+    if(this->has_active_vagrant_vm)
+      vagrant_destroy();
 
     // Close database
-    sqlite3_close(db);
+    int rc = sqlite3_close(this->db);
+    if(rc != SQLITE_OK)
+      std::cerr<<"Error closing database!\n";
   }
 
   int SingularityBuilder::build() {
