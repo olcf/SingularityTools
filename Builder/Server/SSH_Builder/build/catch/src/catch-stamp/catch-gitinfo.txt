@@ -1,3 +1,0 @@
-repository='https://github.com/philsquared/Catch.git'
-module=''
-tag=''

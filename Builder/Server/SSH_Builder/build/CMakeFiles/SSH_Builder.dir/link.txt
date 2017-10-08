@@ -1,1 +1,0 @@
-/usr/bin/c++   -Wall  -rdynamic CMakeFiles/SSH_Builder.dir/src/main.cpp.o CMakeFiles/SSH_Builder.dir/src/signal_handler.cpp.o CMakeFiles/SSH_Builder.dir/src/ssh_sanitizer.cpp.o CMakeFiles/SSH_Builder.dir/src/singularity_builder.cpp.o  -o SSH_Builder -lboost_system -lboost_filesystem -lsqlite3 
