@@ -215,7 +215,7 @@ namespace builder {
     }
     else {
       std::string bad_function;
-      bad_function += "SSH_Sanitizer doesn't impliment " + command;
+      bad_function += "SSH_Sanitizer doesn't implement " + command;
       throw std::system_error(ENOSYS, std::generic_category(), bad_function);
     }
     return err;
