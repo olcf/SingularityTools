@@ -7,7 +7,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 #include <system_error>
-#include "singularity_builder.h"
 #include "signal_handler.h"
 #include "vagrant_builder.h"
 

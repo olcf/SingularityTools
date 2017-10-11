@@ -5,6 +5,7 @@
 #include "sql_db.h"
 
 // Handle allowing a maximum number of concurrent builds. 
+#define MAX_VM_COUNT 4
 
 namespace builder {
   #ifdef DEBUG
@@ -14,7 +15,7 @@ namespace builder {
   #endif 
 
   ResourceManager::ResourceManager() : db{gDatabase},
-                                       build_slot_resered{false}
+                                       build_slot_reserved{false}
   {}
 
   ResourceManager::~ResourceManager() {
@@ -32,19 +33,19 @@ namespace builder {
   }
 
   // Decrement the number of active build
-  void SingularityBuilder::release_build_slot(bool should_throw=true) {
+  void ResourceManager::release_build_slot(bool should_throw) {
     std::string SQL_insert("UPDATE active_builds SET count = count - 1 WHERE id = 1;");
-    int rc = db.exec(SQL_insert, NULL, NULL, should_throw);
+    db.exec(SQL_insert, NULL, NULL, should_throw);
   }
 
   // Reserve a build slot if one is available, return true if reserved else return false
-  bool SingularityBuilder::reserve_build_slot() {
+  bool ResourceManager::reserve_build_slot() {
     if(this->build_slot_reserved) {
-      throw bloogblarg;
+      throw std::system_error(EBUSY, std::system_category(), "Build slot already reserved!");
     }
 
     // Begin transaction
-    db.exec(db, "BEGIN TRANSACTION", NULL, NULL);
+    db.exec("BEGIN TRANSACTION", NULL, NULL);
 
     // Read the number of active VMs
     int active_vm_count;

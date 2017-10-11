@@ -34,9 +34,9 @@ namespace builder {
       this->exit();
   }
 
-  void BuildQueue::reserve_vagrant_slot() {
+  void BuildQueue::reserve_build_slot() {
     // Print an animation while waiting for available slot to open up
-    while(!this->top && !resources.reserve_build_slot()) {
+    while(!this->top() && !resources.reserve_build_slot()) {
       std::cout<<"Waiting for resources: .  \r" << std::flush;
       std::this_thread::sleep_for(std::chrono::milliseconds(600));
       std::cout<<"Waiting for resources: .. \r" << std::flush;
@@ -69,7 +69,7 @@ namespace builder {
   bool BuildQueue::top() {
     std::string first_in_queue;
     std::string select_command("SELECT build_id FROM queue ORDER BY build_id ASC LIMIT 1;");
-    db.exec(insert_command, first_in_queue_callback, &first_in_queue);
+    db.exec(select_command, top_of_queue_callback, &first_in_queue);
     return first_in_queue == build_id;
   }
 }

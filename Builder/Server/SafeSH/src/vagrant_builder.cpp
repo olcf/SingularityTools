@@ -4,6 +4,8 @@
 #include <system_error>
 #include "sql_db.h"
 #include "signal_handler.h"
+#include <boost/process.hpp>
+#include "build_queue.h"
 
 namespace builder {
   namespace bp = boost::process;
@@ -23,7 +25,7 @@ namespace builder {
     std::string stop_command("vagrant destroy");
     std::error_code err;
     boost::process::system(stop_command, err);
-    if(err.vaue() != 0) {
+    if(err.value() != 0) {
       std::cerr<<"Failed to stop Vagrant VM!"<<std::endl;
     }
     this->active = false;

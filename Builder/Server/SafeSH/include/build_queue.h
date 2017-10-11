@@ -16,7 +16,7 @@ namespace builder {
     BuildQueue(BuildQueue&&) noexcept        = delete;
     BuildQueue& operator=(BuildQueue&&)      = delete;
 
-    void reserve_vagrant_slot();
+    void reserve_build_slot();
   private:
     SQL db;
     ResourceManager resources;

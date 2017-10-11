@@ -9,14 +9,14 @@ namespace builder {
   public:
     // Constructors
     ResourceManager();
-    ~ResourceManager()                                    = default;
+    ~ResourceManager();
     ResourceManager(const ResourceManager&)               = delete;
     ResourceManager& operator=(const ResourceManager&)    = delete;
     ResourceManager(ResourceManager&&) noexcept           = delete;
     ResourceManager& operator=(ResourceManager&&)         = delete;
 
     bool reserve_build_slot();
-    void release_build_slot();
+    void release_build_slot(bool should_throw=true);
     bool build_slot_reserved;
 
   private:

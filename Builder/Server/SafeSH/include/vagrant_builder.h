@@ -9,7 +9,6 @@ namespace builder {
       // Constructors
       VagrantBuilder();
       ~VagrantBuilder();
-      VagrantBuilder()                                  = delete;
       VagrantBuilder(const VagrantBuilder&)             = delete;
       VagrantBuilder& operator=(const VagrantBuilder&)  = delete;
       VagrantBuilder(VagrantBuilder&&) noexcept         = delete;
@@ -17,7 +16,8 @@ namespace builder {
 
       int build();
     private:
-      active;
-      destroy();
+      bool active;
+      void bring_up();
+      void destroy();
   };
 }

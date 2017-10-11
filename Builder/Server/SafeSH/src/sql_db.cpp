@@ -1,5 +1,7 @@
 #include "sql_db.h"
 #include "sqlite3.h"
+#include <iostream>
+#include <system_error>
 
 namespace builder {
 
@@ -17,13 +19,13 @@ namespace builder {
                                   db{db_init(db_file)}
   {}
 
-  SQL::SQL() {
+  SQL::~SQL() {
     int rc = sqlite3_close(this->db);
     if(rc != SQLITE_OK)
       std::cerr<<"Error closing database!\n";
   }
 
- void SQL::exec(std::string sql_command, int (*callback)(void*,int,char**,char**), void *callback_arg) {
+ void SQL::exec(std::string sql_command, int (*callback)(void*,int,char**,char**), void *callback_arg, bool should_throw) {
     char *db_err = NULL;
 
     int rc = sqlite3_exec(this->db, sql_command.c_str(), callback, callback_arg, &db_err);
@@ -37,7 +39,7 @@ namespace builder {
     }
  }
 
-  sqlite3_int64 last_insert_rowid() {
+  sqlite3_int64 SQL::last_insert_rowid() {
     return sqlite3_last_insert_rowid(this->db);
   }
 

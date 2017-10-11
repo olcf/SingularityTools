@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <functional>
 #include "ssh_sanitizer.h"
-#include "singularity_builder.h"
 #include "sqlite3.h"
 #include <boost/filesystem.hpp>
 
@@ -164,7 +163,7 @@ class tmp_db {
       boost::filesystem::remove_all("./Builder.db");
     }
 };
-
+/*
 TEST_CASE("SingularityBuilder() can be constructed if Builder.db SQLite db exists") {
   std::string work_path("/some/work/path");
   std::string build_id("1");
@@ -188,3 +187,4 @@ TEST_CASE("The build queue works as expected") {
      REQUIRE_THAT(job1.first_in_queue() == true);
    } 
 }
+*/

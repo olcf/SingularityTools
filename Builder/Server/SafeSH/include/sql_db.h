@@ -21,6 +21,6 @@ namespace builder {
     sqlite3_int64 last_insert_rowid();
   private:
     std::string db_file;
-    const sqlite3 *db;
+    sqlite3 *db;
   };
 }
