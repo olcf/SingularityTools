@@ -9,6 +9,7 @@
 #include <system_error>
 #include "singularity_builder.h"
 #include "signal_handler.h"
+#include "vagrant_builder.h"
 
 // Execute a sanitized copy of $SSH_ORIGINAL_COMMAND, as provided by the ssh authorized_keys command option
 // A single string argument is expected so it must be quoted when setting command, e.g.
@@ -156,7 +157,7 @@ namespace builder {
     return 0;
     #endif
 
-    SingularityBuilder builder(this->unique_work_path, this->unique_id);
+    VagrantBuilder builder;
     int err = builder.build();
     return err;
   }

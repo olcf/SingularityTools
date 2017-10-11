@@ -152,7 +152,7 @@ class tmp_db {
       int rc;
       rc = sqlite3_open_v2("Builder.db", &db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
       rc |= sqlite3_exec(db,"CREATE TABLE active_builds(id INTEGER PRIMARY KEY, count INTEGER);", NULL, NULL, NULL);
-      rc |= sqlite3_exec(db,"CREATE TABLE build_queue(id INTEGER PRIMARY KEY AUTOINCREMENT, buid_id STRING);", NULL, NULL, NULL);
+      rc |= sqlite3_exec(db,"CREATE TABLE build_queue(build_id INTEGER PRIMARY KEY AUTOINCREMENT);", NULL, NULL, NULL);
       rc |= sqlite3_exec(db,"INSERT INTO active_builds(id, count) VALUES(1, 0);", NULL, NULL, NULL);
       rc |= sqlite3_close(db);
 
@@ -169,8 +169,22 @@ TEST_CASE("SingularityBuilder() can be constructed if Builder.db SQLite db exist
   std::string work_path("/some/work/path");
   std::string build_id("1");
 
-  SECTION("if Builder db exists no exception is thrown") {
+  SECTION("If Builder db exists SingularityBuilder() succeeds") {
     tmp_db db;
     REQUIRE_NOTHROW(builder::SingularityBuilder(work_path, build_id));
   }
+
+  SECTION("If Builder db doesn't already exist SingularityBuilder() fails)") {
+    REQUIRE_THROWS_WITH(builder::SingularityBuilder(work_path, build_id), Contains("Failed to init database"));
+  }
+}
+
+TEST_CASE("The build queue works as expected") {
+  tmp_db db;
+
+   SECTION("the first job to enter the queue is at the top") {
+     builder::SingularityBuilder job1("/work_path", "job1");
+     job1.enter_queue();
+     REQUIRE_THAT(job1.first_in_queue() == true);
+   } 
 }
