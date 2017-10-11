@@ -6,14 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -fpie -Wl,-z,noexecstack,-z,now,-z,relro,-z,nodlopen")
 
 set(SRCS src/build_queue.cpp
-         src/main.cpp
          src/resource_manager.cpp
          src/signal_handler.cpp
          src/sql_db.cpp
          src/ssh_sanitizer.cpp
          src/vagrant_builder.cpp)
 
-add_executable(SafeSH ${SRCS})
+add_executable(SafeSH src/main.cpp ${SRCS})
 add_executable(SafeSH_Tests src/tests.cpp ${SRCS})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
