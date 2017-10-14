@@ -14,6 +14,12 @@ namespace builder {
     static constexpr auto gDatabase = "/home/builder/BuildQueue.db";
   #endif 
 
+  enum class JobStatus: char {
+    queued   = 'q',
+    running  = 'r',
+    finished = 'f'
+  };
+
   // Enter a new build into the queue and return it's build id
   std::string enter(SQL& db) {
     std::string insert_command("INSERT INTO queue DEFAULT VALUES;");

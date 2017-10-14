@@ -3,6 +3,7 @@
 #include <string>
 #include "sql_db.h"
 #include "resource_manager.h"
+#include "build_queue.h"
 
 namespace builder {
   class BuildQueue {
@@ -20,7 +21,6 @@ namespace builder {
   private:
     SQL db;
     ResourceManager resources;
-    bool queued;
     const std::string build_id;
     void exit();
     bool top();

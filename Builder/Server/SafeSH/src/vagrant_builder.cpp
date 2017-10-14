@@ -11,12 +11,16 @@ namespace builder {
   namespace bp = boost::process;
 
   // Upon construction the build will be added to the queue
-  VagrantBuilder::VagrantBuilder() : active{false} {
+  VagrantBuilder::VagrantBuilder() {
+    // Wait for a valid slot to become available
+    queue.reserve_build_slot();
+
+    // Bring up the VM
+    this->bring_up();
   }
 
   VagrantBuilder::~VagrantBuilder() {
-    if(this->active)
-      this->destroy();
+    this->destroy();
   }
 
   // Stop the vagrant VM and remove it
@@ -28,7 +32,6 @@ namespace builder {
     if(err.value() != 0) {
       std::cerr<<"Failed to stop Vagrant VM!"<<std::endl;
     }
-    this->active = false;
   }
 
   // Wait for an open build spot and then Fire up the VM
@@ -42,31 +45,21 @@ namespace builder {
     // Test if we should stop vagrant
     while(vagrant_proc.running()) {
       if(gShouldKill) {
-        destroy();
+        this->destroy();
       }
     }
 
-    // Wait for vagrant to complete bool
+    // Wait for vagrant to complete
     vagrant_proc.wait();
     int rc = vagrant_proc.exit_code();
-    if(rc == 0)
-      this->active = true;
-    else {
+    if(rc != 0) {
       this->destroy();
       throw std::system_error(ENONET, std::generic_category(), "Vagrant bring_up failed!");
     }
-      
   }
 
   // Run singularity build within our vagrant container
   int VagrantBuilder::build() {
-    // Wait for a valid slot to become available
-    BuildQueue queue;
-    queue.reserve_build_slot();
-
-    // Spin up the VM if slot is available
-    this->bring_up();
-
     // Launch the vagrant build asynchronously
     std::string vagrant_build_command("vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'");
     bp::child vagrant_proc_build(vagrant_build_command);
@@ -74,15 +67,12 @@ namespace builder {
     // Test if we should stop vagrant
     while(vagrant_proc_build.running()) {
       if(gShouldKill) {
-        destroy();
+        this->destroy();
       }
     }
 
     // Wait for vagrant to complete
     vagrant_proc_build.wait();
-
-    this->destroy();
-
     return vagrant_proc_build.exit_code();
   }
 }

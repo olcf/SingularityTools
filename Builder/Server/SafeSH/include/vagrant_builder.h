@@ -1,6 +1,7 @@
 #pragma once
   
 #include <string>
+#include "build_queue.h"
 
 namespace builder {
   class VagrantBuilder {
@@ -16,7 +17,7 @@ namespace builder {
 
       int build();
     private:
-      bool active;
+      BuildQueue queue;
       void bring_up();
       void destroy();
   };

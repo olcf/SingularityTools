@@ -27,7 +27,7 @@ vagrant box add ~/VagrantBase/singularity_builder.box --name SingularityBuilder
 # active_builds contains a single row and colum containing the number of active builds
 # We use AUTOINCREMENT so we can can sort our queue
 sqlite3 /home/builder/ResourceManager.db 'CREATE TABLE active_builds(id INTEGER PRIMARY KEY, count INTEGER);'
-sqlite3 /home/builder/BuildQueue.db 'CREATE TABLE queue(build_id INTEGER PRIMARY KEY AUTOINCREMENT);'
+sqlite3 /home/builder/BuildQueue.db 'CREATE TABLE queue(build_id INTEGER PRIMARY KEY AUTOINCREMENT, status TEXT);'
 sqlite3 /home/builder/ResourceManager.db 'INSERT INTO active_builds(id, count) VALUES(1, 0);'
 
 # Create builder scratch work directory
