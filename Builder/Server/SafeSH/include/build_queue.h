@@ -4,9 +4,17 @@
 #include "sql_db.h"
 #include "resource_manager.h"
 #include "build_queue.h"
+#include <functional>
 
 namespace builder {
   class BuildQueue {
+
+    enum class JobStatus: char {
+      queued   = 'q',
+      running  = 'r',
+      finished = 'f',
+      killed   = 'k'
+    };
 
   public:
     // Constructors
@@ -17,12 +25,14 @@ namespace builder {
     BuildQueue(BuildQueue&&) noexcept        = delete;
     BuildQueue& operator=(BuildQueue&&)      = delete;
 
-    void reserve_build_slot();
+    // Run the specified function when queue allows
+    int run(std::function<int()> func);
   private:
     SQL db;
-    ResourceManager resources;
     const std::string build_id;
+    std::string enter();
     void exit();
     bool top();
+    void set_status(JobStatus status);
   };
 }

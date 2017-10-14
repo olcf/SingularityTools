@@ -27,12 +27,12 @@
 
 namespace builder {
   // Compile time constants
-  constexpr auto gScpTo = "scp -t container.def";
-  constexpr auto gScpFrom = "scp -f container.img";
-  constexpr auto gBuilderWorkPath = "/home/builder/container_scratch/";
-  constexpr auto gBuilderPrep = "BuilderPrep";
-  constexpr auto gBuilderRun = "BuilderRun";
-  constexpr auto gBuilderCleanup = "BuilderCleanup";
+  static constexpr auto gScpTo = "scp -t container.def";
+  static constexpr auto gScpFrom = "scp -f container.img";
+  static constexpr auto gBuilderWorkPath = "/home/builder/container_scratch/";
+  static constexpr auto gBuilderPrep = "BuilderPrep";
+  static constexpr auto gBuilderRun = "BuilderRun";
+  static constexpr auto gBuilderCleanup = "BuilderCleanup";
 
    // Sanitize the command to be run
   static std::string get_command(int argc, char **argv) {

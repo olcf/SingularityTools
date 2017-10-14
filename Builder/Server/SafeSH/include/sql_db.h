@@ -19,6 +19,7 @@ namespace builder {
 
     void exec(std::string sql, int (*callback)(void*,int,char**,char**), void *callback_arg, bool should_throw=true);
     sqlite3_int64 last_insert_rowid();
+    int changes();
   private:
     std::string db_file;
     sqlite3 *db;

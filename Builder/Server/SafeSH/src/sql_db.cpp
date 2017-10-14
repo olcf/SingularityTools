@@ -43,4 +43,8 @@ namespace builder {
     return sqlite3_last_insert_rowid(this->db);
   }
 
+  int SQL::changes() {
+    return sqlite3_changes(this->db);
+  };
+
 }

@@ -2,29 +2,24 @@
 #include <iostream>
 #include <string>
 #include <system_error>
+#include <cerrno>
 #include "sql_db.h"
 #include "signal_handler.h"
 #include <boost/process.hpp>
 #include "build_queue.h"
 
 namespace builder {
+#ifndef ENONET
+  #define ENONET 2
+#endif
   namespace bp = boost::process;
 
-  // Upon construction the build will be added to the queue
-  VagrantBuilder::VagrantBuilder() {
-    // Wait for a valid slot to become available
-    queue.reserve_build_slot();
-
-    // Bring up the VM
-    this->bring_up();
-  }
-
   VagrantBuilder::~VagrantBuilder() {
-    this->destroy();
+    this->tear_down();
   }
 
   // Stop the vagrant VM and remove it
-  void VagrantBuilder::destroy() {
+  void VagrantBuilder::tear_down() {
     std::cerr<<"Attempting to destroy VM..."<<std::endl;
     std::string stop_command("vagrant destroy");
     std::error_code err;
@@ -45,7 +40,7 @@ namespace builder {
     // Test if we should stop vagrant
     while(vagrant_proc.running()) {
       if(gShouldKill) {
-        this->destroy();
+        this->tear_down();
       }
     }
 
@@ -53,26 +48,31 @@ namespace builder {
     vagrant_proc.wait();
     int rc = vagrant_proc.exit_code();
     if(rc != 0) {
-      this->destroy();
+      this->tear_down();
       throw std::system_error(ENONET, std::generic_category(), "Vagrant bring_up failed!");
     }
   }
 
-  // Run singularity build within our vagrant container
+  // Run singularity build within vagrant VM
   int VagrantBuilder::build() {
-    // Launch the vagrant build asynchronously
-    std::string vagrant_build_command("vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'");
-    bp::child vagrant_proc_build(vagrant_build_command);
+    BuildQueue queue;
+    int rc = queue.run([&]() {
+      this->bring_up();
 
-    // Test if we should stop vagrant
-    while(vagrant_proc_build.running()) {
-      if(gShouldKill) {
-        this->destroy();
+      std::string vagrant_build_command("vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'");
+      bp::child vagrant_proc_build(vagrant_build_command);
+      while (vagrant_proc_build.running()) {
+        if (gShouldKill) {
+          this->tear_down();
+        }
       }
-    }
+      vagrant_proc_build.wait();
 
-    // Wait for vagrant to complete
-    vagrant_proc_build.wait();
-    return vagrant_proc_build.exit_code();
+      this->tear_down();
+
+      return vagrant_proc_build.exit_code();
+    });
+
+    return rc;
   }
 }

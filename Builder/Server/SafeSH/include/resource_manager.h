@@ -4,7 +4,14 @@
 #include "sql_db.h"
 
 namespace builder {
+  enum class SlotStatus;
+
   class ResourceManager {
+
+    enum class SlotStatus: char {
+      free      = 'f',
+      reserved  = 'r'
+    };
 
   public:
     // Constructors
@@ -15,11 +22,12 @@ namespace builder {
     ResourceManager(ResourceManager&&) noexcept           = delete;
     ResourceManager& operator=(ResourceManager&&)         = delete;
 
-    bool reserve_build_slot();
-    void release_build_slot(bool should_throw=true);
-    bool build_slot_reserved;
-
+    bool reserve_slot();
+    void release_slot(bool should_throw=true);
+    bool slot_reserved();
   private:
     SQL db;
+    std::string slot_id;
+    void set_status(SlotStatus status);
   };
 }

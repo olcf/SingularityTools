@@ -7,8 +7,7 @@ namespace builder {
   class VagrantBuilder {
 
     public:
-      // Constructors
-      VagrantBuilder();
+      VagrantBuilder()                                  = default;
       ~VagrantBuilder();
       VagrantBuilder(const VagrantBuilder&)             = delete;
       VagrantBuilder& operator=(const VagrantBuilder&)  = delete;
@@ -17,8 +16,7 @@ namespace builder {
 
       int build();
     private:
-      BuildQueue queue;
       void bring_up();
-      void destroy();
+      void tear_down();
   };
 }

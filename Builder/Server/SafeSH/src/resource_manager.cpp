@@ -4,68 +4,61 @@
 #include <system_error>
 #include "sql_db.h"
 
-// Handle allowing a maximum number of concurrent builds. 
-#define MAX_VM_COUNT 4
-
 namespace builder {
   #ifdef DEBUG
-    static constexpr auto gDatabase = "./ResourceManager.db";
+    static constexpr auto resource_database = "./ResourceManager.db";
   #else
-    static constexpr auto gDatabase = "/home/builder/ResourceManager.db";
-  #endif 
+    static constexpr auto resource_database = "/home/builder/ResourceManager.db";
+  #endif
 
-  ResourceManager::ResourceManager() : db{gDatabase},
-                                       build_slot_reserved{false}
+  ResourceManager::ResourceManager() : db{resource_database}
   {}
 
   ResourceManager::~ResourceManager() {
-    // Ensure that the build slot is released if not explicitly done
-    if(build_slot_reserved) {
-      this->release_build_slot();
-    }
+      this->release_slot(NO_THROW);
   }
 
-  // If active VM count < MAX_VM_COUNT incriment VM count and return true
-  // Reserve a valid loop device id if possible, or -1 if no device is available
-  static int active_count_callback(void *active_vm_count, int count, char** values, char** names) {
-    *static_cast<int*>(active_vm_count) = std::stoi(std::string(values[0]));
-    return 0;
+  bool ResourceManager::slot_reserved() {
+    return this->slot_id.empty();
   }
 
-  // Decrement the number of active build
-  void ResourceManager::release_build_slot(bool should_throw) {
-    std::string SQL_insert("UPDATE active_builds SET count = count - 1 WHERE id = 1;");
-    db.exec(SQL_insert, NULL, NULL, should_throw);
+  // Free slot
+  void ResourceManager::release_slot(bool should_throw) {
+    if(!this->slot_reserved())
+      return;
+
+    std::string update_command = std::string() + "UPDATE slot SET status = " +
+                             static_cast<char>(SlotStatus::free) +
+                             "WHERE id = " + this->slot_id + ";";
+    db.exec(update_command, NULL, NULL, should_throw);
+    this->slot_id = "";
   }
 
   // Reserve a build slot if one is available, return true if reserved else return false
-  bool ResourceManager::reserve_build_slot() {
-    if(this->build_slot_reserved) {
-      throw std::system_error(EBUSY, std::system_category(), "Build slot already reserved!");
+  bool ResourceManager::reserve_slot() {
+    if(this->slot_reserved()) {
+      return true;
     }
 
-    // Begin transaction
-    db.exec("BEGIN TRANSACTION", NULL, NULL);
+    // Reserve a free slot if one exists
+    std::string update_command = std::string() + "UPDATE slot SET status = " +
+                                 static_cast<char>(SlotStatus::reserved) +
+                                 " WHERE status = " + static_cast<char>(SlotStatus::free) + " LIMIT 1;";
+    db.exec(update_command, NULL, NULL);
 
-    // Read the number of active VMs
-    int active_vm_count;
-    std::string SQL_fetch("SELECT count FROM active_builds LIMIT 1;");
-    db.exec(SQL_fetch, active_count_callback, &active_vm_count);
-
-    // If there is space reserve a slot
-    bool reserved_slot = false;
-    if(active_vm_count < MAX_VM_COUNT) {
-      active_vm_count++;
-      std::string SQL_insert("UPDATE active_builds SET count = count + 1 WHERE id = 1;");
-      db.exec(SQL_insert.c_str(), NULL, NULL);
-      reserved_slot = true;
+    // Check if we were able to reserve the slot and update as required
+    int reserved_slot = db.changes();
+    if(reserved_slot) {
+      this->slot_id = std::to_string(db.last_insert_rowid());
     }
-    // End transaction
-    db.exec("END TRANSACTION", NULL, NULL);
-
-    this->build_slot_reserved = reserved_slot;
 
     return reserved_slot;
-  } 
+  }
+
+  void ResourceManager::set_status(SlotStatus status) {
+    std::string status_command = std::string() + "UPDATE slot SET status = " + static_cast<char>(status) +
+                                 " WHERE id = " + this->slot_id + ";";
+    db.exec(status_command, NULL, NULL, NO_THROW);
+  }
 
 }
