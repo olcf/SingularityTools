@@ -31,8 +31,8 @@ namespace builder {
     SQL db;
     const std::string build_id;
     std::string enter();
-    void exit();
+    void exit(bool should_throw=true);
     bool top();
-    void set_status(JobStatus status);
+    void set_status(JobStatus status, bool should_throw=true);
   };
 }

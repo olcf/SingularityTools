@@ -19,24 +19,22 @@ namespace builder {
   }
 
   bool ResourceManager::slot_reserved() {
-    return this->slot_id.empty();
+    return !this->slot_id.empty();
   }
 
-  // Free slot
+  // Release slot slot
   void ResourceManager::release_slot(bool should_throw) {
     if(!this->slot_reserved())
       return;
 
-    std::string update_command = std::string() + "UPDATE slot SET status = " +
-                             static_cast<char>(SlotStatus::free) +
-                             "WHERE id = " + this->slot_id + ";";
-    db.exec(update_command, NULL, NULL, should_throw);
+    this->set_status(SlotStatus::free, should_throw);
     this->slot_id = "";
   }
 
   // Reserve a build slot if one is available, return true if reserved else return false
   bool ResourceManager::reserve_slot() {
     if(this->slot_reserved()) {
+      std::cerr<<"Slot already reserved!\n";
       return true;
     }
 
@@ -55,7 +53,7 @@ namespace builder {
     return reserved_slot;
   }
 
-  void ResourceManager::set_status(SlotStatus status) {
+  void ResourceManager::set_status(SlotStatus status, bool should_throw) {
     std::string status_command = std::string() + "UPDATE slot SET status = " + static_cast<char>(status) +
                                  " WHERE id = " + this->slot_id + ";";
     db.exec(status_command, NULL, NULL, NO_THROW);

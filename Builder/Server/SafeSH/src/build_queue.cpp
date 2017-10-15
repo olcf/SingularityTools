@@ -22,7 +22,7 @@ namespace builder {
   }
 
   BuildQueue::~BuildQueue() {
-    this->exit();
+    this->exit(NO_THROW);
   }
 
   // Enter a new build into the queue and return it's build id
@@ -30,21 +30,24 @@ namespace builder {
     std::string insert_command = std::string() + "INSERT INTO queue (id, status, timestamp) VALUES (DEFAULT," +
                                  static_cast<char>(JobStatus::queued) + ",DEFAULT);";
     this->db.exec(insert_command, NULL, NULL);
-    this->set_status(JobStatus::queued);
-
+\
     // rowid is an alias for the primary key
     return std::to_string(db.last_insert_rowid());
   }
 
   // Remove a build from the queue
-  void BuildQueue::exit() {
-    this->set_status(JobStatus::finished);
+  void BuildQueue::exit(bool should_throw) {
+    this->set_status(JobStatus::finished, should_throw);
   }
 
-  void BuildQueue::set_status(JobStatus status) {
+  void BuildQueue::set_status(JobStatus status, bool should_throw) {
+    if(this->build_id.empty()) {
+      std::cerr<<"Error setting build queue status: build_id not set!\n";
+      return;
+    }
     std::string status_command = std::string() + "UPDATE queue SET status = " + static_cast<char>(status) +
                                  " WHERE build_id = " + this->build_id + ";";
-    db.exec(status_command, NULL, NULL, NO_THROW);
+    db.exec(status_command, NULL, NULL, should_throw);
   }
 
   static void print_spinner() {
@@ -67,6 +70,7 @@ namespace builder {
         return EXIT_FAILURE;
       }
     }
+
     // Run the specified function when slot is available
     this->set_status(JobStatus::running);
     int rc = func();

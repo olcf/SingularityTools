@@ -56,6 +56,7 @@ namespace builder {
   // Run singularity build within vagrant VM
   int VagrantBuilder::build() {
     BuildQueue queue;
+
     int rc = queue.run([&]() {
       this->bring_up();
 

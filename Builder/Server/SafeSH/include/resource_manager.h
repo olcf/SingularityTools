@@ -28,6 +28,6 @@ namespace builder {
   private:
     SQL db;
     std::string slot_id;
-    void set_status(SlotStatus status);
+    void set_status(SlotStatus status, bool should_throw=true);
   };
 }
