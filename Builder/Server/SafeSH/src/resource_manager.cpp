@@ -11,7 +11,8 @@ namespace builder {
     static constexpr auto resource_database = "/home/builder/ResourceManager.db";
   #endif
 
-  ResourceManager::ResourceManager() : db{resource_database}
+  ResourceManager::ResourceManager() : db{resource_database},
+                                       slot_id("")
   {}
 
   ResourceManager::~ResourceManager() {
@@ -26,31 +27,43 @@ namespace builder {
   void ResourceManager::release_slot(bool should_throw) {
     if(!this->slot_reserved())
       return;
-
     this->set_status(SlotStatus::free, should_throw);
     this->slot_id = "";
   }
 
   // Reserve a build slot if one is available, return true if reserved else return false
+  static int slot_available_callback(void *available_slot_id, int count, char** values, char** names) {
+    *static_cast<std::string*>(available_slot_id) = values[0];
+    return 0;
+  }
   bool ResourceManager::reserve_slot() {
     if(this->slot_reserved()) {
       std::cerr<<"Slot already reserved!\n";
       return true;
     }
+    // Begin transaction
+    db.exec("BEGIN TRANSACTION", NULL, NULL);
 
-    // Reserve a free slot if one exists
+    // See if a slot is available
+    std::string available_slot_id;
+    std::string select_command = std::string() + "SELECT id FROM slot WHERE status = \"" + static_cast<char>(SlotStatus::free) + "\" LIMIT 1;";
+    db.exec(select_command, slot_available_callback, &available_slot_id);
+
+    // If no slot is free return
+    if(available_slot_id.empty())
+      return false;
+
+    // If a slot is available reserve it
     std::string update_command = std::string() + "UPDATE slot SET status = \"" +
                                  static_cast<char>(SlotStatus::reserved) +
-                                 "\" WHERE id IN (SELECT id FROM slot WHERE status = \"" + static_cast<char>(SlotStatus::free) + "\" LIMIT 1);";
+                                 "\" WHERE id = " + available_slot_id + ";";
     db.exec(update_command, NULL, NULL);
 
-    // Check if we were able to reserve the slot and update as required
-    int reserved_slot = db.changes();
-    if(reserved_slot) {
-      this->slot_id = std::to_string(db.last_insert_rowid());
-    }
+    // End transaction
+    db.exec("END TRANSACTION", NULL, NULL);
 
-    return reserved_slot;
+    this->slot_id = available_slot_id;
+    return true;
   }
 
   void ResourceManager::set_status(SlotStatus status, bool should_throw) {

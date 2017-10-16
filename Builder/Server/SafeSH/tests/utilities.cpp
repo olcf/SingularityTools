@@ -40,8 +40,8 @@ TMP_DB::TMP_DB() {
     sqlite3 *resource_db = NULL;
     rc = sqlite3_open_v2("ResourceManager.db", &resource_db, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
     rc |= sqlite3_exec(resource_db, "CREATE TABLE slot(id INTEGER PRIMARY KEY, status TEXT);", NULL, NULL, NULL);
-    rc |= sqlite3_exec(resource_db, "INSERT INTO slot(id, status) VALUES(1, 'f');", NULL, NULL, NULL);
-    rc |= sqlite3_exec(resource_db, "INSERT INTO slot(id, status) VALUES(2, 'f');", NULL, NULL, NULL);
+    rc |= sqlite3_exec(resource_db, "INSERT INTO slot(status) VALUES('f');", NULL, NULL, NULL);
+    rc |= sqlite3_exec(resource_db, "INSERT INTO slot(status) VALUES('f');", NULL, NULL, NULL);
     rc |= sqlite3_close(resource_db);
 
     if (rc != SQLITE_OK) {

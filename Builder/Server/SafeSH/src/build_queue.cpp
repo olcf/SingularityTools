@@ -30,7 +30,7 @@ namespace builder {
     std::string insert_command = std::string() + "INSERT INTO queue (status) VALUES (\"" +
                                  static_cast<char>(JobStatus::queued) + "\");";
     this->db.exec(insert_command, NULL, NULL);
-\
+
     // rowid is an alias for the primary key
     return std::to_string(db.last_insert_rowid());
   }
