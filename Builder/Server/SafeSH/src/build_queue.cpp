@@ -27,8 +27,8 @@ namespace builder {
 
   // Enter a new build into the queue and return it's build id
   std::string BuildQueue::enter() {
-    std::string insert_command = std::string() + "INSERT INTO queue (id, status, timestamp) VALUES (DEFAULT," +
-                                 static_cast<char>(JobStatus::queued) + ",DEFAULT);";
+    std::string insert_command = std::string() + "INSERT INTO queue (status) VALUES (\"" +
+                                 static_cast<char>(JobStatus::queued) + "\");";
     this->db.exec(insert_command, NULL, NULL);
 \
     // rowid is an alias for the primary key
@@ -45,8 +45,8 @@ namespace builder {
       std::cerr<<"Error setting build queue status: build_id not set!\n";
       return;
     }
-    std::string status_command = std::string() + "UPDATE queue SET status = " + static_cast<char>(status) +
-                                 " WHERE build_id = " + this->build_id + ";";
+    std::string status_command = std::string() + "UPDATE queue SET status = \"" + static_cast<char>(status) +
+                                 "\" WHERE id = \"" + this->build_id + "\";";
     db.exec(status_command, NULL, NULL, should_throw);
   }
 
@@ -85,9 +85,9 @@ namespace builder {
   }
   bool BuildQueue::top() {
     std::string first_in_queue;
-    std::string select_command = std::string() + "SELECT id FROM queue WHERE status = " +
+    std::string select_command = std::string() + "SELECT id FROM queue WHERE status = \"" +
                                  static_cast<char>(JobStatus::queued) +
-                                 " ORDER BY timestamp ASC LIMIT 1;";
+                                 "\" ORDER BY timestamp ASC LIMIT 1;";
     db.exec(select_command, top_of_queue_callback, &first_in_queue);
     return first_in_queue == build_id;
   }

@@ -39,9 +39,9 @@ namespace builder {
     }
 
     // Reserve a free slot if one exists
-    std::string update_command = std::string() + "UPDATE slot SET status = " +
+    std::string update_command = std::string() + "UPDATE slot SET status = \"" +
                                  static_cast<char>(SlotStatus::reserved) +
-                                 " WHERE status = " + static_cast<char>(SlotStatus::free) + " LIMIT 1;";
+                                 "\" WHERE id IN (SELECT id FROM slot WHERE status = \"" + static_cast<char>(SlotStatus::free) + "\" LIMIT 1);";
     db.exec(update_command, NULL, NULL);
 
     // Check if we were able to reserve the slot and update as required
@@ -54,9 +54,9 @@ namespace builder {
   }
 
   void ResourceManager::set_status(SlotStatus status, bool should_throw) {
-    std::string status_command = std::string() + "UPDATE slot SET status = " + static_cast<char>(status) +
-                                 " WHERE id = " + this->slot_id + ";";
-    db.exec(status_command, NULL, NULL, NO_THROW);
+    std::string status_command = std::string() + "UPDATE slot SET status = \"" + static_cast<char>(status) +
+                                 "\" WHERE id = \"" + this->slot_id + "\";";
+    db.exec(status_command, NULL, NULL, should_throw);
   }
 
 }

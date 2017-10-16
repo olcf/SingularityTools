@@ -32,10 +32,14 @@ namespace builder {
     if(rc != SQLITE_OK) {
       std::string err(db_err);
       sqlite3_free(db_err);
-      if(should_throw)
-        throw std::system_error(ECONNABORTED, std::generic_category(), err);
-      else
-        std::cerr<<"Error: " << err << std::endl;
+      if(should_throw) {
+          std::string throw_err("Error: ");
+          throw_err += err + " in command: " + sql_command + " ";
+          throw std::system_error(ECONNABORTED, std::generic_category(), throw_err);
+      }
+      else {
+          std::cerr << "Error: " << err << std::endl;
+      }
     }
  }
 

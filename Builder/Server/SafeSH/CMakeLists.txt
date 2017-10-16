@@ -14,7 +14,9 @@ set(SRCS src/build_queue.cpp
          src/vagrant_builder.cpp)
 
 add_executable(SafeSH src/main.cpp ${SRCS})
-add_executable(SafeSH_Tests src/tests.cpp ${SRCS})
+add_executable(SafeSH_Tests tests/main.cpp
+                            tests/utilities.cpp
+                            ${SRCS})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

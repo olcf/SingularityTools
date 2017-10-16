@@ -1,14 +1,17 @@
-//
-// Created by atj on 10/16/17.
-//
+#pragma once
 
-#ifndef SAFESH_UTILITIES_H
-#define SAFESH_UTILITIES_H
+#include <functional>
+#include <iostream>
 
-
-class utilities {
+class TMP_DB {
+  public:
+    TMP_DB();
+    ~TMP_DB();
+    TMP_DB(const TMP_DB&)               = delete;
+    TMP_DB& operator=(const TMP_DB&)    = delete;
+    TMP_DB(TMP_DB&&) noexcept           = delete;
+    TMP_DB& operator=(TMP_DB&&)         = delete;
 
 };
 
-
-#endif //SAFESH_UTILITIES_H
+void capture_stdout(std::function<void()>func, std::string& std_out);
