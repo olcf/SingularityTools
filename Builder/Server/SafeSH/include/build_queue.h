@@ -1,38 +1,80 @@
 #pragma once
-  
+
 #include <string>
 #include "sql_db.h"
 #include "resource_manager.h"
 #include "build_queue.h"
 #include <functional>
+#include <iostream>
+#include "signal_handler.h"
 
 namespace builder {
-  class BuildQueue {
+    class BuildQueue {
 
-    enum class JobStatus: char {
-      queued   = 'q',
-      running  = 'r',
-      finished = 'f',
-      killed   = 'k'
+        enum class JobStatus : char {
+            queued = 'q',
+            running = 'r',
+            finished = 'f',
+            killed = 'k'
+        };
+
+    public:
+        // Constructors
+        BuildQueue();
+
+        ~BuildQueue();
+
+        BuildQueue(const BuildQueue &) = delete;
+
+        BuildQueue &operator=(const BuildQueue &) = delete;
+
+        BuildQueue(BuildQueue &&) noexcept = delete;
+
+        BuildQueue &operator=(BuildQueue &&)      = delete;
+
+        static void print_spinner() {
+          #ifndef DEBUG
+            std::cout<<"Waiting for resources: .  \r" << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
+            std::cout<<"Waiting for resources: .. \r" << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
+            std::cout<<"Waiting for resources: ...\r" << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
+          #endif
+        }
+
+        // Run the specified function when the job has made it's way to the top of the queue
+        template<class F>
+        auto run(F&& func) {
+            ResourceManager build_resource;
+
+            // Print an animation while waiting for available slot to open up
+            while (!(this->top() && build_resource.reserve_slot())) {
+                print_spinner();
+                if (gShouldKill) {
+                    this->set_status(JobStatus::killed);
+                    std::cerr<<"function killed in queue!\n";
+                    // TODO don't know how to return...throw an exception maybe? why not!
+                }
+            }
+
+            // Run the specified function when slot is available
+            this->set_status(JobStatus::running);
+            auto return_value = func();
+            this->set_status(JobStatus::finished);
+            return return_value;
+        };
+
+    private:
+        SQL db;
+        const std::string build_id;
+
+        std::string enter();
+
+        void exit(bool should_throw = true);
+
+        bool top();
+
+        void set_status(JobStatus status, bool should_throw = true);
     };
-
-  public:
-    // Constructors
-    BuildQueue();
-    ~BuildQueue();
-    BuildQueue(const BuildQueue&)            = delete;
-    BuildQueue& operator=(const BuildQueue&) = delete;
-    BuildQueue(BuildQueue&&) noexcept        = delete;
-    BuildQueue& operator=(BuildQueue&&)      = delete;
-
-    // Run the specified function when queue allows
-    int run(std::function<int()> func);
-  private:
-    SQL db;
-    const std::string build_id;
-    std::string enter();
-    void exit(bool should_throw=true);
-    bool top();
-    void set_status(JobStatus status, bool should_throw=true);
-  };
 }

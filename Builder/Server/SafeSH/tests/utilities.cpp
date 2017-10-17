@@ -7,7 +7,6 @@
 #include "sqlite3.h"
 #include <boost/filesystem.hpp>
 
-
 // Run the provided lambda func and capture any stdout output in the provided string
 void capture_stdout(std::function<void()>func, std::string& std_out) {
   std::stringstream buffer;

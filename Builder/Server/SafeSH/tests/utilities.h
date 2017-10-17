@@ -15,3 +15,4 @@ class TMP_DB {
 };
 
 void capture_stdout(std::function<void()>func, std::string& std_out);
+void capture_stdout(std::function<void()>func, std::string& std_out, std::streambuf* old_buffer);

@@ -5,9 +5,6 @@
 #include "sql_db.h"
 #include <chrono>
 #include <thread>
-#include "resource_manager.h"
-#include "signal_handler.h"
-#include <functional>
 
 namespace builder {
   #ifdef DEBUG
@@ -50,36 +47,6 @@ namespace builder {
     std::string status_command = std::string() + "UPDATE queue SET status = \"" + static_cast<char>(status) +
                                  "\" WHERE id = \"" + this->build_id + "\";";
     db.exec(status_command, NULL, NULL, should_throw);
-  }
-
-  static void print_spinner() {
-    #ifndef DEBUG
-    std::cout<<"Waiting for resources: .  \r" << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(600));
-    std::cout<<"Waiting for resources: .. \r" << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(600));
-    std::cout<<"Waiting for resources: ...\r" << std::flush;
-    std::this_thread::sleep_for(std::chrono::milliseconds(600));
-    #endif
-  }
-
-  int BuildQueue::run(std::function<int()> func) {
-    ResourceManager build_resource;
-
-    // Print an animation while waiting for available slot to open up
-    while( !( this->top() && build_resource.reserve_slot() ) ) {
-      print_spinner();
-      if(gShouldKill) {
-        this->set_status(JobStatus::killed);
-        return EXIT_FAILURE;
-      }
-    }
-
-    // Run the specified function when slot is available
-    this->set_status(JobStatus::running);
-    int rc = func();
-    this->set_status(JobStatus::finished);
-    return rc;
   }
 
   // Return true if the specified build job is at the top of the queue
