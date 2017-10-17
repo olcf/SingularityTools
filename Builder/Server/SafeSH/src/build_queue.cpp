@@ -16,6 +16,8 @@ namespace builder {
     static constexpr auto build_database = "/home/builder/BuildQueue.db";
   #endif
 
+  // TODO: pass the function to run into constructor//
+
   // Upon construction the build will be added to the queue
   BuildQueue::BuildQueue() : db{build_database},
                              build_id{this->enter()} {
@@ -51,12 +53,14 @@ namespace builder {
   }
 
   static void print_spinner() {
+    #ifndef DEBUG
     std::cout<<"Waiting for resources: .  \r" << std::flush;
     std::this_thread::sleep_for(std::chrono::milliseconds(600));
     std::cout<<"Waiting for resources: .. \r" << std::flush;
     std::this_thread::sleep_for(std::chrono::milliseconds(600));
     std::cout<<"Waiting for resources: ...\r" << std::flush;
     std::this_thread::sleep_for(std::chrono::milliseconds(600));
+    #endif
   }
 
   int BuildQueue::run(std::function<int()> func) {

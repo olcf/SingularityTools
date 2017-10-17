@@ -31,6 +31,7 @@ namespace builder {
     this->slot_id = "";
   }
 
+  // TODO: Clean this up so we don't leak transactions or such
   // Reserve a build slot if one is available, return true if reserved else return false
   static int slot_available_callback(void *available_slot_id, int count, char** values, char** names) {
     *static_cast<std::string*>(available_slot_id) = values[0];
@@ -50,8 +51,10 @@ namespace builder {
     db.exec(select_command, slot_available_callback, &available_slot_id);
 
     // If no slot is free return
-    if(available_slot_id.empty())
+    if(available_slot_id.empty()) {
+      db.exec("END TRANSACTION", NULL, NULL);
       return false;
+    }
 
     // If a slot is available reserve it
     std::string update_command = std::string() + "UPDATE slot SET status = \"" +
