@@ -28,7 +28,7 @@ namespace builder {
   std::string BuildQueue::enter() {
     std::string insert_command = std::string() + "INSERT INTO queue (status) VALUES (\"" +
                                  static_cast<char>(JobStatus::queued) + "\");";
-    this->db.exec(insert_command, NULL, NULL);
+    this->db.exec(insert_command, nullptr, nullptr);
 
     // rowid is an alias for the primary key
     return std::to_string(db.last_insert_rowid());
@@ -46,7 +46,7 @@ namespace builder {
     }
     std::string status_command = std::string() + "UPDATE queue SET status = \"" + static_cast<char>(status) +
                                  "\" WHERE id = \"" + this->build_id + "\";";
-    db.exec(status_command, NULL, NULL, should_throw);
+    db.exec(status_command, nullptr, nullptr, should_throw);
   }
 
   // Return true if the specified build job is at the top of the queue

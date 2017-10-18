@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include <stdlib.h>
+#include <cstdlib>
 #include "ssh_sanitizer.h"
 #include "sql_db.h"
 #include <boost/filesystem.hpp>

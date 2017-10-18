@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <errno.h>
+#include <cerrno>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/process.hpp>
@@ -63,7 +63,7 @@ namespace builder {
   // This allows us to keep track of a user who is making multiple SSH calls using control master
   static std::string get_unique_id() {
     char const* tmp = getenv("SSH_CONNECTION");
-    if ( tmp == NULL ) {
+    if ( tmp == nullptr ) {
       throw std::system_error(EIDRM, std::generic_category(), "SSH_CONNECTION");
     }
 
@@ -176,8 +176,8 @@ namespace builder {
   // The client generally doesn't know the actual path to the container so the command is transformed as follows
   // scp -t container.def -> scp -t unique_work_path/container.def
   // scp -f container.img -> scp -f unique_work_path/container.img
-  // Upon transfering the definition to the builder we create the unique directory and kick off the build process
-  // Upon transfering the final image to the client we delete the unique work directory o nthe builder 
+  // Upon transferring the definition to the builder we create the unique directory and kick off the build process
+  // Upon transferring the final image to the client we delete the unique work directory o nthe builder
   int SSH_Sanitizer::run_scp_to() {
     // Initiate SCP "to" the builder
     std::string scp_call;

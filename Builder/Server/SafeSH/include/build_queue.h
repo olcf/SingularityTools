@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include "signal_handler.h"
+#include <thread>
 
 namespace builder {
     class BuildQueue {

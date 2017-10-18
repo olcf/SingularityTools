@@ -46,7 +46,7 @@ namespace builder {
     }
     // Begin immediate transaction, if not immediate multiple processes may read
       // and attempt to update an available row
-    db.exec("BEGIN IMMEDIATE TRANSACTION", NULL, NULL);
+    db.exec("BEGIN IMMEDIATE TRANSACTION", nullptr, nullptr);
 
     // See if a slot is available
     std::string available_slot_id;
@@ -55,7 +55,7 @@ namespace builder {
 
     // If no slot is free return
     if(available_slot_id.empty()) {
-      db.exec("END TRANSACTION", NULL, NULL);
+      db.exec("END TRANSACTION", nullptr, nullptr);
       return false;
     }
 
@@ -64,7 +64,7 @@ namespace builder {
     this->set_status(SlotStatus::reserved);
 
     // End transaction
-    db.exec("END TRANSACTION", NULL, NULL);
+    db.exec("END TRANSACTION", nullptr, nullptr);
 
     this->slot_id = available_slot_id;
     return true;
@@ -73,7 +73,7 @@ namespace builder {
   void ResourceManager::set_status(SlotStatus status, bool should_throw) {
     std::string status_command = std::string() + "UPDATE slot SET status = \"" + static_cast<char>(status) +
                                  "\" WHERE id = \"" + this->slot_id + "\";";
-    db.exec(status_command, NULL, NULL, should_throw);
+    db.exec(status_command, nullptr, nullptr, should_throw);
   }
 
 }
