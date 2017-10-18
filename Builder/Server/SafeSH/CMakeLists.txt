@@ -13,12 +13,13 @@ set(SRCS src/build_queue.cpp
          src/ssh_sanitizer.cpp
          src/vagrant_builder.cpp)
 
-add_executable(SafeSH src/main.cpp ${SRCS})
-add_executable(SafeSH_Tests tests/main.cpp
+add_executable(SafeSH src/safe_sh.cpp ${SRCS})
+add_executable(SafeSH_Tests ${SRCS}
+                            tests/main.cpp
                             tests/utilities.cpp
                             tests/ssh_sanitizer.cpp
                             tests/build_queue.cpp
-                            ${SRCS})
+                            tests/resource_manager.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

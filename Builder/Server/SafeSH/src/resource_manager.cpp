@@ -39,14 +39,14 @@ namespace builder {
     return 0;
   }
   bool ResourceManager::reserve_slot() {
-      // This is a bit of a hack to avoid
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+
     if(this->slot_reserved()) {
       std::cerr<<"Slot already reserved!\n";
       return true;
     }
-    // Begin transaction
-    db.exec("BEGIN TRANSACTION IMMEDIATE", NULL, NULL);
+    // Begin immediate transaction, if not immediate multiple processes may read
+      // and attempt to update an available row
+    db.exec("BEGIN IMMEDIATE TRANSACTION", NULL, NULL);
 
     // See if a slot is available
     std::string available_slot_id;
