@@ -22,7 +22,7 @@ TEST_CASE("run() works correctly") {
   SECTION("run should return 0 on success") {
     TMP_DB db;
     builder::BuildQueue queue;
-    auto func = []() -> int {
+    auto func = []() {
       return 0;
     };
     int rc = queue.run(func);
@@ -32,7 +32,7 @@ TEST_CASE("run() works correctly") {
   SECTION("run() should run the provided function") {
     TMP_DB db;
     builder::BuildQueue queue;
-    auto print_func = []() -> int {
+    auto print_func = []() {
       std::cout << "Running!";
       return 0;
     };
@@ -61,7 +61,9 @@ TEST_CASE("run() works correctly") {
     REQUIRE(std::stol(std_out_a) < std::stol(std_out_b));
   }
 
-  // This test can expose a race condition in the DB transactions
+  // This test isn't guaranteed to work as there i no guarantee
+    // as to the order in which the threads will be launched.
+    // With that said it should likely work
   SECTION("jobs should run in the queue in FIFO order") {
     for(int i=0; i<10; i++) {
       TMP_DB db;
@@ -88,6 +90,7 @@ TEST_CASE("run() works correctly") {
         builder::BuildQueue queue_b;
         REQUIRE_NOTHROW(b_time = queue_b.run(start_time_then_sleep));
       });
+        std::this_thread::sleep_for(std::chrono::seconds(1));
       std::thread c([&]() {
         builder::BuildQueue queue_c;
         REQUIRE_NOTHROW(c_time = queue_c.run(start_time));

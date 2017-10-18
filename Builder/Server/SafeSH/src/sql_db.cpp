@@ -8,7 +8,7 @@ namespace builder {
   static sqlite3* db_init(std::string db_file) {
     sqlite3* db = NULL;
     int db_rc = sqlite3_open_v2(db_file.c_str(), &db, SQLITE_OPEN_READWRITE, NULL);
-    db_rc |= sqlite3_busy_timeout(db, 2000);
+    db_rc |= sqlite3_busy_timeout(db, 10000);
     if(db_rc != SQLITE_OK) {
       sqlite3_close(db);
       throw std::system_error(ECONNABORTED, std::generic_category(), "Failed to init database");

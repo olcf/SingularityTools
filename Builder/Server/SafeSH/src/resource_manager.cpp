@@ -3,6 +3,7 @@
 #include <string>
 #include <system_error>
 #include "sql_db.h"
+#include <thread>
 
 namespace builder {
   #ifdef DEBUG
@@ -38,12 +39,14 @@ namespace builder {
     return 0;
   }
   bool ResourceManager::reserve_slot() {
+      // This is a bit of a hack to avoid
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     if(this->slot_reserved()) {
       std::cerr<<"Slot already reserved!\n";
       return true;
     }
     // Begin transaction
-    db.exec("BEGIN TRANSACTION", NULL, NULL);
+    db.exec("BEGIN TRANSACTION IMMEDIATE", NULL, NULL);
 
     // See if a slot is available
     std::string available_slot_id;
@@ -57,10 +60,8 @@ namespace builder {
     }
 
     // If a slot is available reserve it
-    std::string update_command = std::string() + "UPDATE slot SET status = \"" +
-                                 static_cast<char>(SlotStatus::reserved) +
-                                 "\" WHERE id = " + available_slot_id + ";";
-    db.exec(update_command, NULL, NULL);
+    this->slot_id = available_slot_id;
+    this->set_status(SlotStatus::reserved);
 
     // End transaction
     db.exec("END TRANSACTION", NULL, NULL);
