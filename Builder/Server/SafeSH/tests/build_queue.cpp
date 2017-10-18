@@ -12,93 +12,94 @@ using Catch::Contains;
 using Catch::Equals;
 
 TEST_CASE("BuildQueue() can be constructed") {
-    SECTION("No exception is throw when constructed") {
-        TMP_DB db;
-        REQUIRE_NOTHROW(builder::BuildQueue());
-    }
+  SECTION("No exception is throw when constructed") {
+    TMP_DB db;
+    REQUIRE_NOTHROW(builder::BuildQueue());
+  }
 }
 
 TEST_CASE("run() works correctly") {
-    SECTION("run should return 0 on success") {
-        TMP_DB db;
-        builder::BuildQueue queue;
-        auto func = []() -> int {
-            return 0;
-        };
-        int rc = queue.run(func);
-        REQUIRE(rc == 0);
-    }
+  SECTION("run should return 0 on success") {
+    TMP_DB db;
+    builder::BuildQueue queue;
+    auto func = []() -> int {
+      return 0;
+    };
+    int rc = queue.run(func);
+    REQUIRE(rc == 0);
+  }
 
-    SECTION("run() should run the provided function") {
-        TMP_DB db;
-        builder::BuildQueue queue;
-        auto print_func = []() -> int {
-            std::cout << "Running!";
-            return 0;
-        };
+  SECTION("run() should run the provided function") {
+    TMP_DB db;
+    builder::BuildQueue queue;
+    auto print_func = []() -> int {
+      std::cout << "Running!";
+      return 0;
+    };
 
-        std::string std_out;
-        REQUIRE_NOTHROW(capture_stdout([&]() { queue.run(print_func); }, std_out));
-        REQUIRE_THAT(std_out, Equals("Running!"));
-    }
+    std::string std_out;
+    REQUIRE_NOTHROW(capture_stdout([&]() { queue.run(print_func); }, std_out));
+    REQUIRE_THAT(std_out, Equals("Running!"));
+  }
 
-    SECTION("BuildQueues should run statements in the order they were queued") {
-        TMP_DB db;
+  SECTION("BuildQueues should run statements in the order they were queued") {
+    TMP_DB db;
+    builder::BuildQueue queue_a;
+    sleep(5);
+    builder::BuildQueue queue_b;
+
+    // Print time since epoc in integral milliseconds
+    auto print_time = []() {
+      std::cout << std::chrono::system_clock::now().time_since_epoch().count();
+      return 0;
+    };
+
+    std::string std_out_a;
+    REQUIRE_NOTHROW(capture_stdout([&]() { queue_a.run(print_time); }, std_out_a));
+    std::string std_out_b;
+    REQUIRE_NOTHROW(capture_stdout([&]() { queue_b.run(print_time); }, std_out_b));
+    REQUIRE(std::stol(std_out_a) < std::stol(std_out_b));
+  }
+
+  // This test can expose a race condition in the DB transactions
+  SECTION("jobs should run in the queue in FIFO order") {
+    for(int i=0; i<10; i++) {
+      TMP_DB db;
+
+      // Return the current time and then sleep for 10 seconds
+      auto start_time_then_sleep = []() {
+        auto time = std::chrono::system_clock::now();
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        return time;
+      };
+      //  Return the current time
+      auto start_time = []() {
+        return std::chrono::system_clock::now();
+      };
+
+      // Two resources are available, the third job should wait at least 10 seconds to launch
+      std::chrono::time_point<std::chrono::system_clock> a_time, b_time, c_time;
+
+      std::thread a([&]() {
         builder::BuildQueue queue_a;
-        sleep(5);
+        REQUIRE_NOTHROW(a_time = queue_a.run(start_time_then_sleep));
+      });
+      std::thread b([&]() {
         builder::BuildQueue queue_b;
+        REQUIRE_NOTHROW(b_time = queue_b.run(start_time_then_sleep));
+      });
+      std::thread c([&]() {
+        builder::BuildQueue queue_c;
+        REQUIRE_NOTHROW(c_time = queue_c.run(start_time));
+      });
 
-        // Print time since epoc in integral milliseconds
-        auto print_time = []() {
-            std::cout << std::chrono::system_clock::now().time_since_epoch().count();
-            return 0;
-        };
+      a.join();
+      b.join();
+      c.join();
 
-        std::string std_out_a;
-        REQUIRE_NOTHROW(capture_stdout([&]() { queue_a.run(print_time); }, std_out_a));
-        std::string std_out_b;
-        REQUIRE_NOTHROW(capture_stdout([&]() { queue_b.run(print_time); }, std_out_b));
-        REQUIRE(std::stol(std_out_a) < std::stol(std_out_b));
+      REQUIRE(9 <= std::chrono::duration_cast<std::chrono::seconds>(c_time - a_time).count());
+      REQUIRE(9 <= std::chrono::duration_cast<std::chrono::seconds>(c_time - b_time).count());
+      REQUIRE(2 >= std::abs(std::chrono::duration_cast<std::chrono::seconds>(b_time - a_time).count()));
     }
-
-    SECTION("If more builds are queued that resources available the job should wait for resources") {
-        TMP_DB db;
-
-        // Return the current time and then sleep for 10 seconds
-        auto sleep_time_now = []() {
-            auto time = std::chrono::system_clock::now();
-            std::this_thread::sleep_for(std::chrono::seconds(10));
-            return time;
-        };
-        //  Return the current time
-        auto time_now = []() {
-            return std::chrono::system_clock::now();
-        };
-
-        // Two resources are available, the third job should wait at least 10 seconds to launch
-        std::chrono::time_point<std::chrono::system_clock> a_time, b_time, c_time;
-
-        // Capture original cout buffer
-        std::streambuf *original_buffer = std::cout.rdbuf();
-
-        std::thread a([&]() {
-            builder::BuildQueue queue_a;
-            REQUIRE_NOTHROW(a_time = queue_a.run(sleep_time_now));
-        });
-        std::thread b([&]() {
-            builder::BuildQueue queue_b;
-            REQUIRE_NOTHROW(b_time = queue_b.run(sleep_time_now));
-        });
-        std::thread c([&]() {
-            builder::BuildQueue queue_c;
-            REQUIRE_NOTHROW(c_time = queue_c.run(time_now));
-        });
-
-        a.join();
-        b.join();
-        c.join();
-
-//    REQUIRE(std::stol(std_out_c) - std::stol(std_out_a) >= 10);
-//    REQUIRE(std::stol(std_out_c) - std::stol(std_out_b) >= 10);
-    }
+  }
 }
