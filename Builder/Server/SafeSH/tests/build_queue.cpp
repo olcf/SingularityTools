@@ -97,9 +97,9 @@ TEST_CASE("run() works correctly") {
       b.join();
       c.join();
 
-      REQUIRE(9 <= std::chrono::duration_cast<std::chrono::seconds>(c_time - a_time).count());
-      REQUIRE(9 <= std::chrono::duration_cast<std::chrono::seconds>(c_time - b_time).count());
-      REQUIRE(2 >= std::abs(std::chrono::duration_cast<std::chrono::seconds>(b_time - a_time).count()));
+      REQUIRE(std::chrono::seconds(9) <= c_time - a_time);
+      REQUIRE(std::chrono::seconds(9) <= c_time - b_time);
+      REQUIRE(std::chrono::seconds(2) >= b_time - a_time);
     }
   }
 }
