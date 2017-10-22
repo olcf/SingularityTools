@@ -61,7 +61,7 @@ namespace builder {
 
             // Run the specified function when slot is available
             this->set_status(JobStatus::running);
-            auto return_value = func();
+            auto return_value = func(build_resource.slot_id);
             this->set_status(JobStatus::finished);
             return return_value;
         };

@@ -22,7 +22,7 @@ TEST_CASE("run() works correctly") {
     SECTION("run should return 0 on success") {
         TMP_DB db;
         builder::BuildQueue queue;
-        auto func = []() {
+        auto func = [](std::string slot_id) {
             return 0;
         };
         int rc = queue.run(func);
@@ -32,7 +32,7 @@ TEST_CASE("run() works correctly") {
     SECTION("run() should run the provided function") {
         TMP_DB db;
         builder::BuildQueue queue;
-        auto print_func = []() {
+        auto print_func = [](std::string slot_id) {
             std::cout << "Running!";
             return 0;
         };
@@ -49,7 +49,7 @@ TEST_CASE("run() works correctly") {
         builder::BuildQueue queue_b;
 
         // Print time since epoch in integral milliseconds
-        auto print_time = []() {
+        auto print_time = [](std::string slot_id) {
             std::cout << std::chrono::system_clock::now().time_since_epoch().count();
             return 0;
         };
@@ -69,13 +69,13 @@ TEST_CASE("run() works correctly") {
             TMP_DB db;
 
             // Return the current time and then sleep for 10 seconds
-            auto start_time_then_sleep = []() {
+            auto start_time_then_sleep = [](std::string slot_id) {
                 auto time = std::chrono::system_clock::now();
                 std::this_thread::sleep_for(std::chrono::seconds(10));
                 return time;
             };
             //  Return the current time
-            auto start_time = []() {
+            auto start_time = [](std::string slot_id) {
                 return std::chrono::system_clock::now();
             };
 

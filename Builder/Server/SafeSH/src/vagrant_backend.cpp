@@ -1,4 +1,4 @@
-#include "vagrant_builder.h"
+#include "vagrant_backend.h"
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -14,12 +14,12 @@ namespace builder {
 #endif
   namespace bp = boost::process;
 
-  VagrantBuilder::~VagrantBuilder() {
+  VagrantBackend::~VagrantBackend() {
     this->tear_down();
   }
 
   // Stop the vagrant VM and remove it
-  void VagrantBuilder::tear_down() {
+  void VagrantBackend::tear_down() {
     std::cerr<<"Attempting to destroy VM..."<<std::endl;
     std::string stop_command("vagrant destroy");
     std::error_code err;
@@ -30,7 +30,7 @@ namespace builder {
   }
 
   // Wait for an open build spot and then Fire up the VM
-  void VagrantBuilder::bring_up() {
+  void VagrantBackend::bring_up() {
     std::string vagrant_up_command;
     vagrant_up_command += "vagrant up";
 
@@ -54,10 +54,10 @@ namespace builder {
   }
 
   // Run singularity build within vagrant VM
-  int VagrantBuilder::build() {
+  int VagrantBackend::build() {
     BuildQueue queue;
 
-    int rc = queue.run([&]() {
+    int rc = queue.run([&](std::string slot_id) {
       this->bring_up();
 
       std::string vagrant_build_command("vagrant ssh -c 'sudo singularity build /vagrant/container.img /vagrant/container.def'");

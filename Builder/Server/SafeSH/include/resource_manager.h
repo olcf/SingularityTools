@@ -25,9 +25,9 @@ namespace builder {
     bool reserve_slot();
     void release_slot(bool should_throw=true);
     bool slot_reserved();
+    std::string slot_id;
   private:
     SQL db;
-    std::string slot_id;
     void set_status(SlotStatus status, bool should_throw=true);
   };
 }

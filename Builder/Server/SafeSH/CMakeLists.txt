@@ -11,7 +11,15 @@ set(SRCS src/build_queue.cpp
          src/signal_handler.cpp
          src/sql_db.cpp
          src/ssh_sanitizer.cpp
-         src/vagrant_builder.cpp)
+         src/vagrant_backend.cpp
+         src/docker_backend.cpp
+         include/build_queue.h
+         include/resource_manager.h
+         include/signal_handler.h
+         include/sql_db.h
+         include/ssh_sanitizer.h
+         include/vagrant_backend.h
+         include/docker_backend.h)
 
 add_executable(SafeSH src/safe_sh.cpp ${SRCS})
 add_executable(SafeSH_Tests ${SRCS}
