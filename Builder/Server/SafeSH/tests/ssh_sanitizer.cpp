@@ -14,21 +14,21 @@ TEST_CASE("SSH_Sanitizer() requires a single argument to be provided") {
   SECTION("Providing exactly one argument succeeds") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "FooBar"};
-    auto ** new_argv = (char**)cnew_argv;
-    REQUIRE_NOTHROW(builder::SSH_Sanitizer(new_argc, new_argv));      
+    auto **new_argv = (char **) cnew_argv;
+    REQUIRE_NOTHROW(builder::SSH_Sanitizer(new_argc, new_argv));
   }
 
   SECTION("Providing zero arguments fails") {
     int new_argc = 1;
     const char *cnew_argv[] = {"SSH_Sanitizer"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("argument"));
   }
-  
+
   SECTION("Providing 2 arguments fails") {
     int new_argc = 3;
     const char *cnew_argv[] = {"SSH_Sanitizer", "Foo", "Bar"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("argument"));
   }
 }
@@ -38,7 +38,7 @@ TEST_CASE("SSH_Sanitizer() requires SSH_CONNECTION to be set correctly") {
     unsetenv("SSH_CONNECTION");
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "FooBar"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("SSH_CONNECTION"));
   }
 
@@ -46,7 +46,7 @@ TEST_CASE("SSH_Sanitizer() requires SSH_CONNECTION to be set correctly") {
     setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12", 1);
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "FooBar"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("SSH_CONNECTION"));
   }
 }
@@ -57,29 +57,31 @@ TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands"
   SECTION("scp -t container.def should be allowed") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "scp -t container.def"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
     std::string std_out;
     REQUIRE_NOTHROW(capture_stdout([&]() { ssh_builder.sanitized_run(); }, std_out));
-    REQUIRE_THAT(std_out, Equals("scp -t /home/builder/container_scratch/1.2.3.4_5678_9.10.11.12_131415/container.def"));
+    REQUIRE_THAT(std_out,
+                 Equals("scp -t /home/builder/container_scratch/1.2.3.4_5678_9.10.11.12_131415/container.def"));
   }
 
   SECTION("SSH_Sanitizer should allow scp -f container.img") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "scp -f container.img"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
     std::string std_out;
     REQUIRE_NOTHROW(capture_stdout([&]() { ssh_builder.sanitized_run(); }, std_out));
-    REQUIRE_THAT(std_out, Equals("scp -f /home/builder/container_scratch/1.2.3.4_5678_9.10.11.12_131415/container.img"));
+    REQUIRE_THAT(std_out,
+                 Equals("scp -f /home/builder/container_scratch/1.2.3.4_5678_9.10.11.12_131415/container.img"));
   }
 
   SECTION("SSH_Sanitizer should allow BuilderPrep") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderPrep"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
     std::string std_out;
@@ -90,7 +92,7 @@ TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands"
   SECTION("SSH_Sanitizer should allow BuilderRun") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderRun"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
     std::string std_out;
@@ -101,7 +103,7 @@ TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands"
   SECTION("SSH_Sanitizer should allow BuilderCleanup") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderCleanup"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
     builder::SSH_Sanitizer ssh_builder(new_argc, new_argv);
 
     std::string std_out;
@@ -112,7 +114,7 @@ TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands"
   SECTION("SSH_Sanitizer should not allow BuilderCleanup;rm -rf /") {
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderCleanup;rm -rf /"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
 
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("invalid") && Contains("characters"));
   }
@@ -121,7 +123,7 @@ TEST_CASE("SSH_Sanitizer.sanitized_run() should only allow whitelisted commands"
     setenv("SSH_CONNECTION", "1.2.3.4 5678 9.10.11.12 131415", 1);
     int new_argc = 2;
     const char *cnew_argv[] = {"SSH_Sanitizer", "BuilderCleanup;rm -rf /"};
-    auto ** new_argv = (char**)cnew_argv;
+    auto **new_argv = (char **) cnew_argv;
 
     REQUIRE_THROWS_WITH(builder::SSH_Sanitizer(new_argc, new_argv), Contains("invalid") && Contains("characters"));
   }

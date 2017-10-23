@@ -6,18 +6,17 @@
 #include <thread>
 
 namespace builder {
-  #ifdef DEBUG
-    static constexpr auto resource_database = "./ResourceManager.db";
-  #else
-    static constexpr auto resource_database = "/home/builder/ResourceManager.db";
-  #endif
+#ifdef DEBUG
+  static constexpr auto resource_database = "./ResourceManager.db";
+#else
+  static constexpr auto resource_database = "/home/builder/ResourceManager.db";
+#endif
 
   ResourceManager::ResourceManager() : db{resource_database},
-                                       slot_id("")
-  {}
+                                       slot_id("") {}
 
   ResourceManager::~ResourceManager() {
-      this->release_slot(NO_THROW);
+    this->release_slot(NO_THROW);
   }
 
   bool ResourceManager::slot_reserved() {
@@ -26,7 +25,7 @@ namespace builder {
 
   // Release slot slot
   void ResourceManager::release_slot(bool should_throw) {
-    if(!this->slot_reserved())
+    if (!this->slot_reserved())
       return;
     this->set_status(SlotStatus::free, should_throw);
     this->slot_id = "";
@@ -34,27 +33,29 @@ namespace builder {
 
   // TODO: Clean this up so we don't leak transactions or such
   // Reserve a build slot if one is available, return true if reserved else return false
-  static int slot_available_callback(void *available_slot_id, int count, char** values, char** names) {
-    *static_cast<std::string*>(available_slot_id) = values[0];
+  static int slot_available_callback(void *available_slot_id, int count, char **values, char **names) {
+    *static_cast<std::string *>(available_slot_id) = values[0];
     return 0;
   }
+
   bool ResourceManager::reserve_slot() {
 
-    if(this->slot_reserved()) {
-      std::cerr<<"Slot already reserved!\n";
+    if (this->slot_reserved()) {
+      std::cerr << "Slot already reserved!\n";
       return true;
     }
     // Begin immediate transaction, if not immediate multiple processes may read
-      // and attempt to update an available row
+    // and attempt to update an available row
     db.exec("BEGIN IMMEDIATE TRANSACTION", nullptr, nullptr);
 
     // See if a slot is available
     std::string available_slot_id;
-    std::string select_command = std::string() + "SELECT id FROM slot WHERE status = \"" + static_cast<char>(SlotStatus::free) + "\" LIMIT 1;";
+    std::string select_command =
+        std::string() + "SELECT id FROM slot WHERE status = \"" + static_cast<char>(SlotStatus::free) + "\" LIMIT 1;";
     db.exec(select_command, slot_available_callback, &available_slot_id);
 
     // If no slot is free return
-    if(available_slot_id.empty()) {
+    if (available_slot_id.empty()) {
       db.exec("END TRANSACTION", nullptr, nullptr);
       return false;
     }
