@@ -6,17 +6,24 @@
 namespace builder {
   class DockerBackend {
 
-    public:
-      DockerBackend()                                 = default;
-      ~DockerBackend();
-      DockerBackend(const DockerBackend&)             = delete;
-      DockerBackend& operator=(const DockerBackend&)  = delete;
-      DockerBackend(DockerBackend&&) noexcept         = delete;
-      DockerBackend& operator=(DockerBackend&&)       = delete;
+  public:
+    DockerBackend() = default;
 
-      int build();
-    private:
-      void tear_down();
-      std::string docker_name;
+    ~DockerBackend();
+
+    DockerBackend(const DockerBackend &) = delete;
+
+    DockerBackend &operator=(const DockerBackend &)  = delete;
+
+    DockerBackend(DockerBackend &&) noexcept = delete;
+
+    DockerBackend &operator=(DockerBackend &&)       = delete;
+
+    int build();
+
+  private:
+    void tear_down();
+
+    std::string docker_name;
   };
 }
