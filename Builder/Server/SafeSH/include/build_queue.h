@@ -8,6 +8,7 @@
 #include <iostream>
 #include "signal_handler.h"
 #include <thread>
+#include <system_error>
 
 namespace builder {
     class BuildQueue {
@@ -55,7 +56,7 @@ namespace builder {
                 if (gShouldKill) {
                     this->set_status(JobStatus::killed);
                     std::cerr<<"function killed in queue!\n";
-                    // TODO don't know how to return...throw an exception maybe? why not!
+                    throw std::system_error(EINTR, std::generic_category(), "queue run() interupted by signal");
                 }
             }
 
