@@ -1,5 +1,5 @@
 FROM ubuntu:xenial
-  
+
 RUN apt-get update
 RUN apt-get install -y apt-utils build-essential wget python yum git autoconf libtool autogen squashfs-tools
 RUN git clone -b development https://github.com/singularityware/singularity.git

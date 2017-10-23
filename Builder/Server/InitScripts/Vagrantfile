@@ -1,0 +1,7 @@
+# This is the master vagrantfile which will be boxed up
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-16.04"
+  config.vm.provision "shell", path: "vagrant_builder_provision.sh"
+  config.ssh.insert_key = false
+end
