@@ -3,15 +3,17 @@
 # To get the the nova command lines tool "sudo pip install python-novaclient"
 
 # Destroy any existing builder if one exists
-./destroy_builder_vm.sh
+./TearDown
 
 # Destry the builder if exiting early
 function null_cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT
+  echo "Attempting cleaning...please wait"
 }
 function cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT
-  ./destroy_builder_vm.sh
+  echo "Attempting to cleanup...please wait"
+  ./TearDown
   exit
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
@@ -44,7 +46,7 @@ VM_UUID=$(nova boot                                          \
     --availability-zone "${ZONE}"                            \
     --nic net-name="${NIC}"                                  \
     --key-name "${KEY}"                                      \
-    --user-data ${SCRIPT_DIR}/../ServerScripts/init_builder.sh  \
+    --user-data ${SCRIPT_DIR}/../InitScripts/init_builder_docker.sh  \
     "ContainerBuilder" | awk '/id/ {print $4}' | head -n 1);
 
 # Spinner...

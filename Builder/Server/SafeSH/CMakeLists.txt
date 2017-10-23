@@ -22,12 +22,15 @@ set(SRCS src/build_queue.cpp
          include/docker_backend.h)
 
 add_executable(SafeSH src/safe_sh.cpp ${SRCS})
+
 add_executable(SafeSH_Tests ${SRCS}
                             tests/main.cpp
                             tests/utilities.cpp
                             tests/ssh_sanitizer.cpp
                             tests/build_queue.cpp
                             tests/resource_manager.cpp)
+
+add_executable(BuilderDiag src/builder_diag.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

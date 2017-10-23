@@ -10,7 +10,7 @@ To bring up a new builder instance:
 ```
 SingularityTools/Builder/Server/BuilderControl/BringUp
 ```
-After bringup two SSH keys will be provided in the `cwd`. `CadesKey` provides access for the cades user for administration of the builder while `BuilderKey` provides access the builder user who is restricted to running `SafeSH`
+After bringup three files will be created containing the Builder IP address as well as two SSH keys. `CadesKey` provides access for the cades user for administration of the builder while `BuilderKey` provides access the builder user who is restricted to running `SafeSH`. `BuilderIP` will contain the builders IP address.
 
 To destroy a new builder instance:
 ```

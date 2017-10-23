@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cd /home/cades
 
 # Fetch server init scripts
@@ -74,6 +76,7 @@ cd boost_1_65_1
 sudo ./b2 install
 
 # Install SSH_Builder
+sudo apt-get install -y pkg-config
 cd ${SCRIPTS_DIR}/../SafeSH
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" ..
