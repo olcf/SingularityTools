@@ -66,3 +66,4 @@ target_link_libraries(SafeSH_Tests ${SQLITE3_LIBRARIES})
 
 install(TARGETS SafeSH DESTINATION bin)
 install(TARGETS SafeSH_Tests DESTINATION bin)
+install(TARGETS BuilderDiag DESTINATION bin)

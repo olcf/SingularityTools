@@ -35,13 +35,7 @@ sudo useradd --create-home --home-dir /home/builder --shell /bin/bash builder
 # Allow builder user to run docker as sudo by adding to docker group
 sudo gpasswd -a builder docker
 
-# Package builder vagrant box
-cp ${SCRIPTS_DIR}/Vagrantfile /home/builder/Vagrantfile
 sudo -u builder bash <<EOF
-  vagrant up
-  vagrant package --output singularity_builder.box
-  vagrant box add ~/VagrantBase/singularity_builder.box --name SingularityBuilder`
-
   # Create the Builder database which contains two tables, a build_queue and active_builds
   # build_queue contains a list of queued builds
   # active_builds contains a single row and colum containing the number of active builds
