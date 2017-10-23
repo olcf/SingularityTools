@@ -8,7 +8,7 @@
 #include <boost/process.hpp>
 #include <system_error>
 #include "signal_handler.h"
-#include "vagrant_backend.h"
+#include "docker_backend.h"
 
 // Execute a sanitized copy of $SSH_ORIGINAL_COMMAND, as provided by the ssh authorized_keys command option
 // A single string argument is expected so it must be quoted when setting command, e.g.
@@ -156,7 +156,9 @@ namespace builder {
     return 0;
     #endif
 
-    VagrantBackend builder;
+    boost::filesystem::current_path(this->unique_work_path);
+
+    DockerBackend builder;
     int err = builder.build();
     return err;
   }

@@ -16,12 +16,6 @@ namespace builder {
 #endif
   namespace bp = boost::process;
 
-  DockerBackend::DockerBackend(std::string loop_device):
-                                                         docker_name{"docker_on_loop_" + loop_device}
-  {
-
-  }
-
   DockerBackend::~DockerBackend() {
     this->tear_down();
   }
