@@ -45,7 +45,7 @@ namespace builder {
       std::string docker_command;
       docker_command += "docker run --device=" + loop_device +
                         " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
-                        + this->docker_name + " -mount type=bind,source=" + working_directory
+                        + this->docker_name + " --mount type=bind,source=" + working_directory
                         + ",destination=/work_dir -w /work_dir singularity_builder";
 
       // Launch the command asynchronously
