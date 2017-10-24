@@ -30,8 +30,8 @@ function null_cleanup {
 }
 function cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT
-  /usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderCleanup'
-  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
+  /usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oIdentitiesOnly=yes -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderCleanup'
+  /usr/bin/ssh -O exit -S${CONTROL_SOCKET} -t -F /dev/null -i${KEY_FILE} -oIdentitiesOnly=yes -oStrictHostKeyChecking=no builder@${VM_IP}
   exit
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
@@ -39,21 +39,21 @@ trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
 # Setup a control master socket so that all commands utilize the same connection
 # This allows us to ensure that all subsuquent operations originate from the same user/session
 # https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Multiplexing
-/usr/bin/ssh -f -N -M -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}
+/usr/bin/ssh -f -N -M -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes builder@${VM_IP}
 
 # Prepare the builder for building
-/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderPrep'
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes builder@${VM_IP} 'BuilderPrep'
 
 # Copy definition file to builder
-/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no ${DEF_PATH} builder@${VM_IP}:container.def
+/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F /dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes ${DEF_PATH} builder@${VM_IP}:container.def
 
 # Run the build process
-/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderRun'
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes builder@${VM_IP} 'BuilderRun'
 
 # Copy container file back from builder
-/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP}:container.img ${NAME_PATH}
+/usr/bin/scp -oControlPath=${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes builder@${VM_IP}:container.img ${NAME_PATH}
 
 # Cleanup the builder
-/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no builder@${VM_IP} 'BuilderCleanup'
+/usr/bin/ssh -S${CONTROL_SOCKET} -F/dev/null -i${KEY_FILE} -oStrictHostKeyChecking=no -oIdentitiesOnly=yes builder@${VM_IP} 'BuilderCleanup'
 
 cleanup
