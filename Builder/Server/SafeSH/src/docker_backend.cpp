@@ -27,6 +27,10 @@ namespace builder {
     stop_command += "docker stop " + this->docker_name;
     this->docker_name = "";
     bp::system(stop_command);
+
+      std::string rm_command;
+      rm_command += "docker rm " + this->docker_name;
+      boost::process::system(rm_command);
   }
 
   // Run singularity build within docker instance
