@@ -20,42 +20,42 @@
 // So we can't get fancy and have the SCP call do the prep/build/cleanup
 
 namespace builder {
-  class SSH_Sanitizer {
+    class SSH_Sanitizer {
 
-  public:
-    // Constructors
-    SSH_Sanitizer(int argc, char **argv);
+    public:
+        // Constructors
+        SSH_Sanitizer(int argc, char **argv);
 
-    ~SSH_Sanitizer() = default;
+        ~SSH_Sanitizer() = default;
 
-    SSH_Sanitizer() = delete;
+        SSH_Sanitizer() = delete;
 
-    SSH_Sanitizer(const SSH_Sanitizer &) = delete;
+        SSH_Sanitizer(const SSH_Sanitizer &) = delete;
 
-    SSH_Sanitizer &operator=(const SSH_Sanitizer &) = delete;
+        SSH_Sanitizer &operator=(const SSH_Sanitizer &) = delete;
 
-    SSH_Sanitizer(SSH_Sanitizer &&) noexcept = delete;
+        SSH_Sanitizer(SSH_Sanitizer &&) noexcept = delete;
 
-    SSH_Sanitizer &operator=(SSH_Sanitizer &&)      = delete;
+        SSH_Sanitizer &operator=(SSH_Sanitizer &&)      = delete;
 
-    // Attempt to run the sanitized command
-    int sanitized_run();
+        // Attempt to run the sanitized command
+        int sanitized_run();
 
-  private:
-    int run_scp_to();
+    private:
+        int run_scp_to();
 
-    int run_scp_from();
+        int run_scp_from();
 
-    int run_builder_prep();
+        int run_builder_prep();
 
-    int run_builder();
+        int run_builder();
 
-    int run_builder_cleanup();
+        int run_builder_cleanup();
 
-    int blocking_exec(std::string command);
+        int blocking_exec(std::string command);
 
-    std::string unique_id;
-    std::string unique_work_path;
-    std::string command;
-  };
+        std::string unique_id;
+        std::string unique_work_path;
+        std::string command;
+    };
 }

@@ -4,26 +4,26 @@
 #include "build_queue.h"
 
 namespace builder {
-  class VagrantBackend {
+    class VagrantBackend {
 
-  public:
-    VagrantBackend() = default;
+    public:
+        VagrantBackend() = default;
 
-    ~VagrantBackend();
+        ~VagrantBackend();
 
-    VagrantBackend(const VagrantBackend &) = delete;
+        VagrantBackend(const VagrantBackend &) = delete;
 
-    VagrantBackend &operator=(const VagrantBackend &)  = delete;
+        VagrantBackend &operator=(const VagrantBackend &)  = delete;
 
-    VagrantBackend(VagrantBackend &&) noexcept = delete;
+        VagrantBackend(VagrantBackend &&) noexcept = delete;
 
-    VagrantBackend &operator=(VagrantBackend &&)       = delete;
+        VagrantBackend &operator=(VagrantBackend &&)       = delete;
 
-    int build();
+        int build();
 
-  private:
-    void bring_up();
+    private:
+        void bring_up();
 
-    void tear_down();
-  };
+        void tear_down();
+    };
 }

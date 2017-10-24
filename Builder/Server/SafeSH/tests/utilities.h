@@ -5,17 +5,17 @@
 
 class TMP_DB {
 public:
-  TMP_DB();
+    TMP_DB();
 
-  ~TMP_DB();
+    ~TMP_DB();
 
-  TMP_DB(const TMP_DB &) = delete;
+    TMP_DB(const TMP_DB &) = delete;
 
-  TMP_DB &operator=(const TMP_DB &)    = delete;
+    TMP_DB &operator=(const TMP_DB &)    = delete;
 
-  TMP_DB(TMP_DB &&) noexcept = delete;
+    TMP_DB(TMP_DB &&) noexcept = delete;
 
-  TMP_DB &operator=(TMP_DB &&)         = delete;
+    TMP_DB &operator=(TMP_DB &&)         = delete;
 
 };
 

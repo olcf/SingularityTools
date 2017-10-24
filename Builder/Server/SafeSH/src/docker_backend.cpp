@@ -14,61 +14,62 @@ namespace builder {
 #ifndef ENONET
 #define ENONET 2
 #endif
-  namespace bp = boost::process;
+    namespace bp = boost::process;
 
-  DockerBackend::~DockerBackend() {
-    this->tear_down();
-  }
+    DockerBackend::~DockerBackend() {
+        this->tear_down();
+    }
 
-  // Stop the docker instance and remove it
-  void DockerBackend::tear_down() {
-    std::cerr << "Attempting to kill docker..." << std::endl;
-    std::string stop_command;
-    stop_command += "docker stop " + this->docker_name;
-    this->docker_name = "";
-    bp::system(stop_command);
+    // Stop the docker instance and remove it
+    void DockerBackend::tear_down() {
+        std::cerr << "Attempting to kill docker..." << std::endl;
+        std::string stop_command;
+        stop_command += "docker stop " + this->docker_name;
+        bp::system(stop_command);
 
-      std::string rm_command;
-      rm_command += "docker rm " + this->docker_name;
-      boost::process::system(rm_command);
-  }
+        std::string rm_command;
+        rm_command += "docker rm " + this->docker_name;
+        boost::process::system(rm_command);
 
-  // Run singularity build within docker instance
-  int DockerBackend::build() {
-    BuildQueue queue;
+        this->docker_name = "";
+    }
 
-    int rc = queue.run([&](std::string slot_id) {
-      // The reserved loop device is implicitly set to be the corresponding slot id from the build queue reservation
-      std::string loop_device;
-      loop_device = "/dev/loop" + slot_id;
+    // Run singularity build within docker instance
+    int DockerBackend::build() {
+        BuildQueue queue;
 
-      // Set a unique name for this docker container instance based upon the unique loop id assigned
-      this->docker_name = "docker_on_loop_" + slot_id;
+        int rc = queue.run([&](std::string slot_id) {
+            // The reserved loop device is implicitly set to be the corresponding slot id from the build queue reservation
+            std::string loop_device;
+            loop_device = "/dev/loop" + slot_id;
 
-      std::string working_directory = boost::filesystem::current_path().string();
-      std::string docker_command;
-      docker_command += "docker run --device=" + loop_device +
-                        " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
-                        + this->docker_name + " --mount type=bind,source=" + working_directory
-                        + ",destination=/work_dir -w /work_dir singularity_builder";
+            // Set a unique name for this docker container instance based upon the unique loop id assigned
+            this->docker_name = "docker_on_loop_" + slot_id;
 
-      // Launch the command asynchronously
-      bp::child docker_proc(docker_command);
+            std::string working_directory = boost::filesystem::current_path().string();
+            std::string docker_command;
+            docker_command += "docker run --device=" + loop_device +
+                              " --security-opt apparmor=docker-singularity --cap-add SYS_ADMIN --name "
+                              + this->docker_name + " --mount type=bind,source=" + working_directory
+                              + ",destination=/work_dir -w /work_dir singularity_builder";
 
-      // Test if we should stop docker
-      while (docker_proc.running()) {
-        if (gShouldKill) {
-          this->tear_down();
-        }
-      }
+            // Launch the command asynchronously
+            bp::child docker_proc(docker_command);
 
-      // Wait for docker to complete
-      docker_proc.wait();
-      int return_code = docker_proc.exit_code();
-      return return_code;
-    });
+            // Test if we should stop docker
+            while (docker_proc.running()) {
+                if (gShouldKill) {
+                    this->tear_down();
+                }
+            }
 
-    return rc;
-  }
+            // Wait for docker to complete
+            docker_proc.wait();
+            int return_code = docker_proc.exit_code();
+            return return_code;
+        });
+
+        return rc;
+    }
 
 }

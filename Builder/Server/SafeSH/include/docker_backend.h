@@ -4,26 +4,26 @@
 #include "build_queue.h"
 
 namespace builder {
-  class DockerBackend {
+    class DockerBackend {
 
-  public:
-    DockerBackend() = default;
+    public:
+        DockerBackend() = default;
 
-    ~DockerBackend();
+        ~DockerBackend();
 
-    DockerBackend(const DockerBackend &) = delete;
+        DockerBackend(const DockerBackend &) = delete;
 
-    DockerBackend &operator=(const DockerBackend &)  = delete;
+        DockerBackend &operator=(const DockerBackend &)  = delete;
 
-    DockerBackend(DockerBackend &&) noexcept = delete;
+        DockerBackend(DockerBackend &&) noexcept = delete;
 
-    DockerBackend &operator=(DockerBackend &&)       = delete;
+        DockerBackend &operator=(DockerBackend &&)       = delete;
 
-    int build();
+        int build();
 
-  private:
-    void tear_down();
+    private:
+        void tear_down();
 
-    std::string docker_name;
-  };
+        std::string docker_name;
+    };
 }
