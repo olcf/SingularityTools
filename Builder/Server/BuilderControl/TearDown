@@ -4,7 +4,9 @@
 SCRIPT_DIR=$(dirname $0)
 
 # OpenStack credentials
-source ${SCRIPT_DIR}/openrc.sh
+if [ "$1" != "--no_source" ]; then
+  source ${SCRIPT_DIR}/openrc.sh
+fi
 
 # Remove Key
 nova keypair-delete CadesKey

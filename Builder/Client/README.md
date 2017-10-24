@@ -1,6 +1,4 @@
-* Install the BuilderClient
-
-Three values must be set to run
+Two files created by Server/BringUp must be present in the directory SingularityBuilder is called from
 * `BuilderIP` The IP address of the builder host
 * `BuilderKey` The private builder SSH key
 

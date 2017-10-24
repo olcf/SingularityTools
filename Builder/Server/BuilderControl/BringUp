@@ -2,8 +2,11 @@
 
 # To get the the nova command lines tool "sudo pip install python-novaclient"
 
+# OpenStack credentials
+source ./openrc.sh
+
 # Destroy any existing builder if one exists
-./TearDown
+./TearDown --no_source
 
 # Destry the builder if exiting early
 function null_cleanup {
@@ -13,7 +16,7 @@ function null_cleanup {
 function cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT
   echo "Attempting to cleanup...please wait"
-  ./TearDown
+  ./TearDown --no_source
   exit
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
@@ -26,9 +29,6 @@ BOOTIMG="CADES_Ubuntu16.04_v20170804_1"
 ZONE="nova"
 FLAVOR="m1.medium"
 NIC="or_provider_general_extnetwork1"
-
-# OpenStack credentials
-source ./openrc.sh
 
 # Create Keys for cades user
 KEY="CadesKey"
@@ -78,6 +78,6 @@ rm -rf ContainerBuilderIP
 echo $VM_IP > ${SCRIPT_DIR}/BuilderIP
 
 # Retrieve private key for builder
-scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
+scp -oIdentitiesOnly=yes -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
 
 echo "Started ${VM_UUID} with external IP ${VM_IP} using ${KEY_FILE}"
