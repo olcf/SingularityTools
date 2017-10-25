@@ -67,8 +67,10 @@ namespace builder {
             return return_value;
         };
 
+        // We use shared_ptr instead of reference so that it's cleaned up at program exit
+        static SQL& db();
+
     private:
-        SQL db;
         const std::string build_id;
 
         std::string enter();

@@ -5,8 +5,6 @@
 
 
 TEST_CASE("ResourceManager() can be constructed") {
-    TMP_DB db;
-
     SECTION("No exception is throw when constructed") {
         REQUIRE_NOTHROW(builder::ResourceManager());
     }
@@ -21,8 +19,6 @@ TEST_CASE("ResourceManager() can be constructed") {
 // as to the order in which the threads will be launched.
 // With that said it should likely work
 TEST_CASE("Slots can be reserved and released") {
-    TMP_DB db;
-
     SECTION("All the available slots can be reserved but no more") {
         for (int i = 0; i < 10; i++) {
             std::unique_ptr<builder::ResourceManager> resources_a;

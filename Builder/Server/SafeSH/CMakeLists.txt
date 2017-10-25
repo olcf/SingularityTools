@@ -28,7 +28,7 @@ add_executable(SafeSH_Tests ${SRCS}
                             tests/utilities.cpp
                             tests/ssh_sanitizer.cpp
                             tests/build_queue.cpp
-                            tests/resource_manager.cpp)
+                           tests/resource_manager.cpp)
 
 add_executable(BuilderDiag src/builder_diag.cpp)
 
