@@ -8,12 +8,12 @@ namespace builder {
 
     class ResourceManager {
 
+    public:
         enum class SlotStatus : char {
             free = 'f',
             reserved = 'r'
         };
 
-    public:
         // Constructors
         ResourceManager();
 

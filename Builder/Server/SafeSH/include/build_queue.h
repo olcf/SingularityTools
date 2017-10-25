@@ -13,6 +13,7 @@
 namespace builder {
     class BuildQueue {
 
+    public:
         enum class JobStatus : char {
             queued = 'q',
             running = 'r',
@@ -20,7 +21,6 @@ namespace builder {
             killed = 'k'
         };
 
-    public:
         // Constructors
         BuildQueue();
 
