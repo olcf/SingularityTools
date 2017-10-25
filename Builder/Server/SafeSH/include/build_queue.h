@@ -70,6 +70,8 @@ namespace builder {
         // We use shared_ptr instead of reference so that it's cleaned up at program exit
         static SQL& db();
 
+        static int get_count(JobStatus status);
+
     private:
         const std::string build_id;
 

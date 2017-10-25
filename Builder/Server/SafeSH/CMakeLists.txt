@@ -21,16 +21,17 @@ set(SRCS src/build_queue.cpp
          include/vagrant_backend.h
          include/docker_backend.h)
 
-add_executable(SafeSH src/safe_sh.cpp ${SRCS})
+add_executable(SafeSH ${SRCS} src/safe_sh.cpp)
 
 add_executable(SafeSH_Tests ${SRCS}
                             tests/main.cpp
                             tests/utilities.cpp
                             tests/ssh_sanitizer.cpp
                             tests/build_queue.cpp
-                           tests/resource_manager.cpp)
+                            tests/resource_manager.cpp)
 
-add_executable(BuilderDiag src/builder_diag.cpp)
+add_executable(BuilderDiag ${SRCS}
+                           src/builder_diag.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -56,6 +57,7 @@ find_package(Boost 1.64.0 COMPONENTS system filesystem REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(SafeSH ${Boost_LIBRARIES})
 target_link_libraries(SafeSH_Tests ${Boost_LIBRARIES})
+target_link_libraries(BuilderDiag ${Boost_LIBRARIES})
 
 # Add SQLite
 find_package(PkgConfig)
@@ -63,6 +65,8 @@ pkg_search_module(SQLITE3 REQUIRED sqlite3)
 include_directories(${SQLITE3_INCLUDE_DIRS})
 target_link_libraries(SafeSH ${SQLITE3_LIBRARIES})
 target_link_libraries(SafeSH_Tests ${SQLITE3_LIBRARIES})
+target_link_libraries(BuilderDiag ${SQLITE3_LIBRARIES})
+
 
 install(TARGETS SafeSH DESTINATION bin)
 install(TARGETS SafeSH_Tests DESTINATION bin)

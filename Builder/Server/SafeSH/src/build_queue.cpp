@@ -69,4 +69,16 @@ namespace builder {
         static thread_local auto db = std::make_shared<SQL>(build_database);
         return *db;
     }
+
+    // Retrive the number of resources with the specified status
+    static int count_callback(void *column_count, int count, char **values, char **names) {
+        *static_cast<int*>(column_count) = std::stoi(values[0]);
+        return 0;
+    }
+    int BuildQueue::get_count(JobStatus status) {
+        int count;
+        std::string count_command = std::string() + "SELECT COUNT(*) from queue WHERE status = \"" + static_cast<char>(status) + "\"";
+        db().exec(count_command, count_callback, &count);
+        return count;
+    }
 }

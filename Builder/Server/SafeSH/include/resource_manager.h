@@ -4,8 +4,6 @@
 #include "sql_db.h"
 
 namespace builder {
-    enum class SlotStatus;
-
     class ResourceManager {
 
     public:
@@ -35,7 +33,9 @@ namespace builder {
 
         std::string slot_id;
 
-        SQL& db();
+        static SQL& db();
+
+        static int get_count(SlotStatus status);
     private:
 
         void set_status(SlotStatus status, bool should_throw = true);
