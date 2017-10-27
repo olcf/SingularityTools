@@ -1,3 +1,7 @@
+####
+# Provision a VM capable
+###
+
 #!/bin/bash
 
 set -e
@@ -16,6 +20,36 @@ sudo apt-get update
 sudo apt-get install -y docker-ce
 # Install SQLite
 sudo apt-get install -y sqlite3 libsqlite3-dev
+
+# Add support of ppc64le arch
+sudo apt-get install -y qemu binfmt-support zlib1g-dev libglib2.0-devlibpixman-1-dev libfdt-dev
+
+# Install a newer qemu from source to support ppc64le
+wget https://github.com/qemu/qemu/archive/v2.10.1.tar.gz
+tar xf v2.10.1.tar.gz
+cd qemu-2.10.1/
+mkdir build
+cd build
+../configure --static
+make
+sudo make install
+
+# Add ppc64le repos to apt sources
+cat << EOF > /etc/apt/sources.list
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ xenial main restricted multiverse
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ xenial-updates multiverse
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse
+deb [arch=ppc64el] http://ports.ubuntu.com/ubuntu-ports/ xenial main restricted universe
+deb [arch=ppc64el] http://ports.ubuntu.com/ubuntu-ports/ xenial-updates main restricted universe
+EOF
+
+# Install ppc64le glibc
+sudo dpkg --add-architecture ppc64el
+sudo apt-get update
+sudo apt-get install libc6:ppc64el libc6-dev:ppc64el
+
+# A dirty hack to copy the custom qemu static binaries over top of the distro provided dynamically linked binaries
+sudo cp -r /usr/local/bin/qemu-* /usr/bin
 
 # Docker by default seems to use aufs which isn't compatible with singularity(atleast when bootstrapping from docker)
 # We force the use of overlayfs instead: https://docs.docker.com/engine/userguide/storagedriver/overlayfs-driver/#configure-docker-with-the-overlay-or-overlay2-storage-driver
@@ -59,6 +93,9 @@ sudo chown cades /home/cades/BuilderKey
 
 # Create singularity builder docker image
 sudo docker build -t singularity_builder -f ${SCRIPTS_DIR}/Dockerfile .
+
+# Create singularity ppc64le builder docker image
+sudo docker build -t singularity_builder_ppc -f ${SCRIPTS_DIR}/Dockerfile.ppc .
 
 # Install a new version of boost
 cd /home/cades
