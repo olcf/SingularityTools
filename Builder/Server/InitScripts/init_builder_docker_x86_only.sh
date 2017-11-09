@@ -1,8 +1,8 @@
+#!/bin/bash
+
 ####
 # Provision a VM capable
 ###
-
-#!/bin/bash
 
 set -e
 

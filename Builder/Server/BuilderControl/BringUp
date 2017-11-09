@@ -16,7 +16,7 @@ function null_cleanup {
 function cleanup {
   trap null_cleanup HUP INT TERM PIPE QUIT ABRT
   echo "Attempting to cleanup...please wait"
-  ./TearDown --no_source
+#  ./TearDown --no_source
   exit
 }
 trap cleanup HUP INT TERM PIPE QUIT ABRT ERR
@@ -45,7 +45,7 @@ VM_UUID=$(nova boot                                          \
     --flavor "${FLAVOR}"                                     \
     --availability-zone "${ZONE}"                            \
     --nic net-name="${NIC}"                                  \
-    --key-name "${KEY}"                                      \
+    --key-name "${KEY}"                                     \
     --user-data ${SCRIPT_DIR}/../InitScripts/init_builder_docker_x86_only.sh  \
     "ContainerBuilder" | awk '/id/ {print $4}' | head -n 1);
 
@@ -74,7 +74,6 @@ done
 # Get external IP address
 VM_IP=`nova show ${VM_UUID} | grep or_provider_general_extnetwork1 | awk '{print $5}'`
 
-rm -rf ContainerBuilderIP
 echo $VM_IP > ${SCRIPT_DIR}/BuilderIP
 
 # Retrieve private key for builder
