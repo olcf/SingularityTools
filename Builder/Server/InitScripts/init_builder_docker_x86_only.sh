@@ -51,6 +51,14 @@ sudo chown cades /home/cades/BuilderKey
 # Create singularity builder docker image
 sudo docker build -t singularity_builder -f ${SCRIPTS_DIR}/Dockerfile .
 
+# Update cmake version
+cd /home/cades
+sudo apt remove cmake
+wget https://cmake.org/files/v3.9/cmake-3.9.5-Linux-x86_64.sh
+sudo chmod +x ./cmake-3.9.5-Linux-x86_64.sh
+yes | sudo ./cmake-3.9.5-Linux-x86_64.sh
+sudo ln -s /home/cades/cmake-3.9.5-Linux-x86_64/bin/* /usr/local/bin
+
 # Install a new version of boost
 cd /home/cades
 sudo apt-get install -y cmake
@@ -61,8 +69,10 @@ cd boost_1_65_1
 sudo ./b2 install
 
 # Install ContainerBuilder
+cd /home/cades
 sudo apt-get install -y pkg-config
 git clone https://github.com/AdamSimpson/ContainerBuilder.git
+cd ContainerBuilder
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTAL_PREFIX="/usr/local" ..
 make
