@@ -46,7 +46,6 @@ VM_UUID=$(nova boot                                          \
     --availability-zone "${ZONE}"                            \
     --nic net-name="${NIC}"                                  \
     --key-name "${KEY}"                                      \
-    --user-data ${SCRIPT_DIR}/../InitScripts/init_builder_docker_x86_only.sh  \
     "ContainerBuilder" | awk '/id/ {print $4}' | head -n 1);
 
 # Spinner...
@@ -76,8 +75,5 @@ VM_IP=`nova show ${VM_UUID} | grep or_provider_general_extnetwork1 | awk '{print
 
 rm -rf ContainerBuilderIP
 echo $VM_IP > ${SCRIPT_DIR}/BuilderIP
-
-# Retrieve private key for builder
-scp -oIdentitiesOnly=yes -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no -i $KEY_FILE cades@${VM_IP}:/home/cades/BuilderKey ${SCRIPT_DIR}
 
 echo "Started ${VM_UUID} with external IP ${VM_IP} using ${KEY_FILE}"
