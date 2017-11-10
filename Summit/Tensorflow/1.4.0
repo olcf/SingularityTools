@@ -2,13 +2,13 @@
 # tensorflow
 
 proc ModulesHelp { } {
-   puts stderr "Provide GPU enabled tensorflow/1.0.1 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+   puts stderr "Provide GPU enabled tensorflow/1.4.0 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
 }
-module-whatis "Provide GPU enabled tensorflow/1.0.1 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
+module-whatis "Provide GPU enabled tensorflow/1.4.0 for python2/3 along with mpi4py, keras, theano, and scikit-learn"
 
 set appname tensorflow
 set machine summit
-set version 1.0.0
+set version 1.4.0
 
 if { ! [ is-loaded singularity ] } {
   module load singularity

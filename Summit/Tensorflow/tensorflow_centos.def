@@ -1,0 +1,187 @@
+# Create a CentOS 7 singularity container with CUDA and MPI support
+
+BootStrap: yum
+OSVersion: 7
+MirrorURL: http://mirror.centos.org/altarch/7/os/ppc64le
+Include: yum
+
+%environment
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.151-1.b12.el7_4.ppc64le/jre/bin
+export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.151-1.b12.el7_4.ppc64le
+
+%post
+# Install basic system software
+yum -y update
+yum -y install epel-release
+yum -y update
+yum -y install wget gcc-c++ redhat-lsb libtool autoconf zip unzip git java-1.8.0-openjdk java-devel
+yum -y install atlas atlas-devel gcc-gfortran openssl-devel libffi-devel
+yum -y install python-pip python-devel numpy scipy python-setuptools
+yum -y install python34 python34-devel python34-pip python34-numpy python34-scipy python34-setuptools
+yum -y install glibc-static libstdc++-static
+yum -y install epel-release
+yum repolist
+
+pip2 install --upgrade pip
+pip3 install --upgrade pip
+
+pip2 install setuptools --upgrade
+pip3 install setuptools --upgrade
+
+pip2 install --upgrade wheel
+pip3 install --upgrade wheel
+
+# Install Cuda 8.0
+export PERL5LIB=.
+wget https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
+rpm -i cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
+yum -y clean all
+yum -y install cuda-toolkit-9-0
+
+# Install cuDNN
+wget http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-9.0-linux-ppc64le-v7.tgz
+tar xvzf cudnn-9.0-linux-ppc64le-v7.tgz
+cp -P cuda/targets/ppc64le-linux/include/cudnn.h /usr/local/cuda/include
+cp -P cuda/targets/ppc64le-linux/lib/libcudnn* /usr/local/cuda/lib64
+chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
+
+# Clean up CUDA install
+rm -rf cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
+rm -rf cudnn-9.0-linux-ppc64le-v7.tgz
+
+# Protobuf must exactly match the version bazel requires
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+
+cd /
+rm -rf protobuf
+git clone https://github.com/google/protobuf.git
+cd protobuf
+git checkout v3.4.0
+./autogen.sh
+./configure
+make
+make install
+rm -rf /protobuf
+
+# Disable gradle daemon...please stop doing this
+mkdir -p ~/.gradle && echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+cd /
+rm -rf grpc-java
+git clone https://github.com/grpc/grpc-java.git
+cd grpc-java
+git checkout v1.7.0
+cd compiler
+../gradlew java_pluginExecutable
+rm -rf /grpc-java
+
+cd /
+wget https://github.com/bazelbuild/bazel/releases/download/0.7.0/bazel-0.7.0-dist.zip
+unzip bazel-0.7.0-dist.zip -d /bazel
+cd bazel
+export PROTOC=/usr/local/bin/protoc
+export GRPC_JAVA_PLUGIN=/grpc-java/compiler/build/exe/java_plugin/protoc-gen-grpc-java
+./compile.sh
+cd output
+export PATH=$(pwd):$PATH
+rm -rf /bazel-0.7.0-dist.zip
+
+# Make sure no leftover tensorflow artifacts from previous builds
+rm -rf /tmp/tensorflow_pkg
+rm -rf /root/.cache
+
+# Make sure no leftover tensorflow artifacts from previous builds
+rm -rf /tmp/tensorflow_pkg
+rm -rf /root/.cache
+
+# Set tensorflow configure options
+export PYTHON_BIN_PATH=`which python`
+export PYTHON_LIB_PATH=/usr/lib64/python2.7/site-packages
+export TF_NEED_MKL=0
+export CC_OPT_FLAGS="-march=native"
+export TF_NEED_JEMALLOC=1
+export TF_NEED_GCP=0
+export TF_NEED_HDFS=0
+export TF_ENABLE_XLA=0
+export TF_NEED_OPENCL=0
+export TF_NEED_CUDA=1
+export TF_CUDA_CLANG=0
+export TF_CUDA_VERSION="9.0"
+export CUDA_TOOLKIT_PATH="/usr/local/cuda"
+export TF_CUDNN_VERSION="7"
+export CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
+export TF_CUDA_COMPUTE_CAPABILITIES="6.0"
+export TF_NEED_VERBS=0
+export TF_NEED_S3=0
+export TF_NEED_GDR=0
+export TF_NEED_OPENCL_SYCL=0
+export GCC_HOST_COMPILER_PATH=/usr/bin/gcc
+
+# TENSORFLOW MPI support is currently pretty bad and doesnt pick up the correct libraries
+export TF_NEED_MPI=0
+#export MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi
+
+# Tensorflow has horrible MPI support in ./configure...
+#  ln -s /usr/include/mpi/mpi.h /usr/include/mpi.h
+#  ln -s /usr/include/mpi/mpio.h /usr/include/mpio.h
+#  ln -s /usr/include/mpi/mpicxx.h /usr/include/mpicxx.h
+
+# Tensorflow is the worst
+ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH
+
+# Build/Install Tensorflow against python 2
+# Tensorflow is horrible: https://github.com/tensorflow/tensorflow/commit/d19ec7126735ca98a632ebd69ad64973fd454e6e
+cd /
+git clone https://github.com/tensorflow/tensorflow
+cd tensorflow
+./configure
+bazel  --batch build -c opt --copt=-std=gnu99 --config=cuda tensorflow/tools/pip_package:build_pip_package
+bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+
+pip2 install /tmp/tensorflow_pkg/tensorflow-*.whl
+
+cd /
+rm -rf tensorflow
+rm -rf /tmp/tensorflow_pkg
+
+# Build/Install Tensorflow against python 3
+PYTHON_BIN_PATH=`which python3`
+
+# Tensorflow is horrible: https://github.com/tensorflow/tensorflow/commit/d19ec7126735ca98a632ebd69ad64973fd454e6e
+cd /
+git clone https://github.com/tensorflow/tensorflow
+cd tensorflow
+./configure
+bazel --batch build -c opt --copt=-std=gnu99 --config=cuda tensorflow/tools/pip_package:build_pip_package
+bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+
+pip3 install /tmp/tensorflow_pkg/tensorflow-*.whl
+
+cd /
+rm -rf tensorflow
+rm -rf /tmp/tensorflow_pkg
+
+# Install Additional deeplearning python packages
+
+pip2 install keras
+pip3 install keras
+
+pip2 install scikit-learn
+pip3 install scikit-learn
+
+#apt-get install -y python-theano
+#apt-get install -y python3-theano
+
+#apt-get install -y python-matplotlib
+#apt-get install -y python3-matplotlib
+
+# Make sure bazel is shutdown so it doesn't stop singularity from cleanly exiting
+bazel shutdown
+sleep 10
+#pkill -f bazel*
+ps aux | grep bazel
+bazel shutdown
+
+sleep 60

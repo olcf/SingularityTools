@@ -4,8 +4,8 @@ BootStrap: docker
 From: ppc64le/ubuntu:zesty
 
 %environment
-  export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/lib/jvm/java-8-openjdk-ppc64el/bin
-  export LD_LIBRARY_PATH=/usr/local/lib:/lib64:/lib/powerpc64le-linux-gnu:/usr/lib/powerpc64le-linux-gnu
+  export PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/lib/jvm/java-8-openjdk-ppc64el/bin:/usr/local/cuda/bin
+  export LD_LIBRARY_PATH=/usr/local/lib:/lib64:/lib/powerpc64le-linux-gnu:/usr/lib/powerpc64le-linux-gnu:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
   export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-ppc64el
 
 %post
@@ -16,6 +16,7 @@ From: ppc64le/ubuntu:zesty
   apt-get install -y build-essential wget curl pkg-config libtool autoconf openjdk-8-jdk g++ zip zlib1g-dev unzip git
   apt-get install -y python-numpy python-scipy python-dev python-pip python-setuptools
   apt-get install -y python3-numpy python3-scipy python3-dev python3-pip python3-setuptools
+  apt-get install -y firefox
 
   pip install --upgrade pip
   pip3 install --upgrade pip
@@ -27,31 +28,25 @@ From: ppc64le/ubuntu:zesty
   # Install CUDA toolkit and driver libraries/binaries
 
   # Fetch cuda toolkit installer
-  wget -O cuda_installer.deb https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda-repo-ubuntu1604-8-0-local-ga2_8.0.54-1_ppc64el-deb
-  dpkg -i cuda_installer.deb
+  wget -O cuda-repo-ubuntu1604-9-0-local_9.0.176-1_ppc64el.deb https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-ubuntu1604-9-0-local_9.0.176-1_ppc64el-deb
+  dpkg -i cuda-repo-ubuntu1604-9-0-local_9.0.176-1_ppc64el.deb
+  apt-key add /var/cuda-repo-9-0-local/7fa2af80.pub
   apt-get update
-  apt-get -y install cuda-toolkit-8-0
+  apt-get -y install cuda-toolkit-9-0
 
   # Install cuDNN
-  wget http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-ppc64le-v6.0.tgz
-  tar xvzf cudnn-8.0-linux-ppc64le-v6.0.tgz
+  wget http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-9.0-linux-ppc64le-v7.tgz
+  tar xvzf cudnn-9.0-linux-ppc64le-v7.tgz
   cp -P cuda/targets/ppc64le-linux/include/cudnn.h /usr/local/cuda/include
   cp -P cuda/targets/ppc64le-linux/lib/libcudnn* /usr/local/cuda/lib64
   chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
 
   # Clean up CUDA install
-  rm -rf cuda_installer.deb
-  rm -rf cudnn-8.0-linux-ppc64le-v6.0.tgz
-
-  # Patch CUDA/8.0 to use comptabable gcc
-  apt-get install -y gcc-4.9 g++-4.9
-  ln -s /usr/bin/gcc-4.9 /usr/local/cuda/bin/gcc 
-  ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
+  rm -rf cuda-repo-ubuntu1604-9-0-local_9.0.176-1_ppc64el.deb
+  rm -rf cudnn-9.0-linux-ppc64le-v7.tgz
 
   # Set CUDA related environment variables
   export CUDA_HOME=/usr/local/cuda
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64
-  export PATH=${PATH}:/usr/local/cuda/bin
 
   # Install OpenMPI
   apt-get install -y libopenmpi2
@@ -64,33 +59,36 @@ From: ppc64le/ubuntu:zesty
   rm -rf protobuf
   git clone https://github.com/google/protobuf.git
   cd protobuf
-  git checkout v3.0.0
-  git cherry-pick 1760feb621a913189b90fe8595fffb74bce84598 # an external dependecy URL has changed
+  git checkout v3.4.0
+#  git cherry-pick 1760feb621a913189b90fe8595fffb74bce84598 # an external dependecy URL has changed
   ./autogen.sh
   ./configure
   make
   make install
+  rm -rf /protobuf
 
-  # grpc-java must be built against protobuf 3.0.0 to match bazel
+  # grpc-java must be built against protobuf 3.4.0 to match bazel
   cd /
   rm -rf grpc-java
   git clone https://github.com/grpc/grpc-java.git
   cd grpc-java
-  git checkout v1.0.0
-  git cherry-pick 862157a84be602c1cabfb46958511489337bfd36  # This commit has Power specific changes
+  git checkout v1.7.0
+#  git cherry-pick 862157a84be602c1cabfb46958511489337bfd36  # This commit has Power specific changes
   cd compiler
   ../gradlew java_pluginExecutable
+  rm -rf grpc-java
 
+  apt-get install -y unzip
   cd /
-  rm -rf bazel
-  git clone https://github.com/bazelbuild/bazel.git
+  wget https://github.com/bazelbuild/bazel/releases/download/0.7.0/bazel-0.7.0-dist.zip
+  unzip bazel-0.7.0-dist.zip -d /bazel
   cd bazel
-  git checkout 0.4.5
   export PROTOC=/usr/local/bin/protoc
   export GRPC_JAVA_PLUGIN=/grpc-java/compiler/build/exe/java_plugin/protoc-gen-grpc-java
   ./compile.sh
   cd output
   export PATH=$(pwd):$PATH
+  rm -rf /bazel-0.7.0-dist.zip
 
   # Make sure no leftover tensorflow artifacts from previous builds
   rm -rf /tmp/tensorflow_pkg
@@ -108,13 +106,14 @@ From: ppc64le/ubuntu:zesty
   export TF_NEED_OPENCL=0
   export TF_NEED_CUDA=1
   export TF_CUDA_CLANG=0
-  export GCC_HOST_COMPILER_PATH=/usr/bin/gcc-4.9
-  export TF_CUDA_VERSION="8.0"
+#  export GCC_HOST_COMPILER_PATH=/usr/bin/gcc-4.9
+  export TF_CUDA_VERSION="9.0"
   export CUDA_TOOLKIT_PATH="/usr/local/cuda"
-  export TF_CUDNN_VERSION="6"
+  export TF_CUDNN_VERSION="7"
   export CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
   export TF_CUDA_COMPUTE_CAPABILITIES="6.0"
   export TF_NEED_VERBS=0
+  export TF_NEED_S3=0
 
   # TENSORFLOW MPI support is currently pretty bad and doesnt pick up the correct libraries
   export TF_NEED_MPI=0
@@ -125,19 +124,21 @@ From: ppc64le/ubuntu:zesty
 #  ln -s /usr/include/mpi/mpio.h /usr/include/mpio.h
 #  ln -s /usr/include/mpi/mpicxx.h /usr/include/mpicxx.h
 
+  # Tensorflow is the worst
+  ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+  export LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH
+
   # Java cert update
   apt-get install ca-certificates-java
   update-ca-certificates -f
 
   # Build/Install Tensorflow against python 2
+  # Tensorflow is horrible: https://github.com/tensorflow/tensorflow/commit/d19ec7126735ca98a632ebd69ad64973fd454e6e
   cd /
-  wget https://github.com/tensorflow/tensorflow/archive/v1.3.0.tar.gz -O tensorflow.tar.gz
-  tar xf tensorflow.tar.gz
-  mv tensorflow-1.3.0 tensorflow
+  git clone https://github.com/tensorflow/tensorflow
   cd tensorflow
   ./configure
-
-  bazel build -c opt --config=cuda tensorflow/tools/pip_package:build_pip_package
+  bazel  --batch build -c opt --config=cuda tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 
   pip install /tmp/tensorflow_pkg/tensorflow-*.whl
@@ -149,13 +150,12 @@ From: ppc64le/ubuntu:zesty
   # Build/Install Tensorflow against python 3
   PYTHON_BIN_PATH=`which python3`
 
-  wget https://github.com/tensorflow/tensorflow/archive/v1.3.0.tar.gz -O tensorflow.tar.gz
-  tar xf tensorflow.tar.gz
-  mv tensorflow-1.3.0 tensorflow
+  # Tensorflow is horrible: https://github.com/tensorflow/tensorflow/commit/d19ec7126735ca98a632ebd69ad64973fd454e6e
+  cd /
+  git clone https://github.com/tensorflow/tensorflow
   cd tensorflow
   ./configure
-
-  bazel build -c opt --config=cuda tensorflow/tools/pip_package:build_pip_package
+  bazel --batch build -c opt --config=cuda tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 
   pip3 install /tmp/tensorflow_pkg/tensorflow-*.whl
@@ -181,8 +181,8 @@ From: ppc64le/ubuntu:zesty
   # Make sure bazel is shutdown so it doesn't stop singularity from cleanly exiting
   bazel shutdown
   sleep 10
-  pkill -f bazel*
+  #pkill -f bazel*
   ps aux | grep bazel
+  bazel shutdown
 
-  # Remove tmp files used during bootstrap
-  rm -rf .bootstrap.post
+  sleep 60
