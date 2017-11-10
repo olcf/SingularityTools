@@ -1,4 +1,6 @@
-FROM ubuntu:xenial
+FROM ppc64le/ubuntu
+
+COPY qemu-ppc64le /usr/bin/qemu-ppc64le
 
 RUN apt-get update
 RUN apt-get install -y apt-utils build-essential wget python yum git autoconf libtool autogen squashfs-tools
