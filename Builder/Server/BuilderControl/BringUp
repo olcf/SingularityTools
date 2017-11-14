@@ -2,6 +2,10 @@
 
 # To get the the nova command lines tool "sudo pip install python-novaclient"
 
+export OS_CACERT=`pwd`/OpenStack.cer
+echo "using OS_CACERT="$OS_CACERT
+
+
 # OpenStack credentials
 source ./openrc.sh
 
