@@ -50,7 +50,7 @@ VM_UUID=$(nova boot                                          \
     --availability-zone "${ZONE}"                            \
     --nic net-name="${NIC}"                                  \
     --key-name "${KEY}"                                     \
-    --user-data ${SCRIPT_DIR}/../InitScripts/init_builder_docker_x86_only.sh  \
+    --user-data ${SCRIPT_DIR}/../InitScripts/Docker/init_builder_docker_x86_only.sh  \
     "ContainerBuilder" | awk '/id/ {print $4}' | head -n 1);
 
 # Spinner...
