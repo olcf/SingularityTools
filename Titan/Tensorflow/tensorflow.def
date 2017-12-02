@@ -1,5 +1,6 @@
 ####
 # Defines a Singularity container with GPU and MPI enabled TensorFlow
+# https://www.tensorflow.org/install/install_sources#tested_source_configurations
 ####
 
 BootStrap: docker
@@ -33,15 +34,15 @@ From: ubuntu:zesty
   sh cuda_7.5.18_linux.run --silent --toolkit --override
 
   # Install cuDNN
-  wget http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-7.5-linux-x64-v5.1.tgz
-  tar xvzf cudnn-7.5-linux-x64-v5.1.tgz 
+  wget http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-7.5-linux-x64-v6.0.tgz
+  tar xvzf cudnn-7.5-linux-x64-v6.0.tgz 
   cp -P cuda/include/cudnn.h /usr/local/cuda/include
   cp -P cuda/lib64/libcudnn* /usr/local/cuda/lib64
   chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
 
   # Clean up CUDA install
   rm -rf cuda_7.5.18_linux.run
-  rm -rf cudnn-7.5-linux-x64-v5.1.tgz
+  rm -rf cudnn-7.5-linux-x64-v6.0.tgz
 
   # Patch CUDA/7.5 to use gcc/4.9, the highest support release
   apt install -y gcc-4.9 g++-4.9
@@ -49,10 +50,9 @@ From: ubuntu:zesty
   ln -s /usr/bin/g++-4.9 /usr/local/cuda/bin/g++
 
   # Install Bazel
-  echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-  curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
-  apt update -y && apt install -y bazel
-  apt upgrade -y bazel
+  wget https://github.com/bazelbuild/bazel/releases/download/0.4.5/bazel-0.4.5-installer-linux-x86_64.sh
+  chmod +x bazel-0.4.5-installer-linux-x86_64.sh
+  ./bazel-0.4.5-installer-linux-x86_64.sh  
 
   # Make sure no leftover tensorflow artifacts from previous builds
   rm -rf /tmp/tensorflow_pkg
@@ -73,17 +73,14 @@ From: ubuntu:zesty
   export GCC_HOST_COMPILER_PATH=/usr/bin/gcc-4.9
   export TF_CUDA_VERSION="7.5"
   export CUDA_TOOLKIT_PATH="/usr/local/cuda"
-  export TF_CUDNN_VERSION="5"
+  export TF_CUDNN_VERSION="6"
   export CUDNN_INSTALL_PATH=$CUDA_TOOLKIT_PATH
   export TF_CUDA_COMPUTE_CAPABILITIES="3.5"
   export TF_NEED_VERBS=0
-  export TF_NEED_MPI=1
+  export TF_NEED_MPI=0
   export MPI_HOME=/usr
-
-  # Tensorflow has horrible MPI support in ./configure...
-  ln -s /usr/include/mpi/mpi.h /usr/include/mpi.h
-  ln -s /usr/include/mpi/mpio.h /usr/include/mpio.h
-  ln -s /usr/include/mpi/mpicxx.h /usr/include/mpicxx.h
+  export TF_NEED_GDR=0
+  export TF_NEED_S3=0
 
   # Java cert update
   apt install ca-certificates-java
@@ -96,10 +93,10 @@ From: ubuntu:zesty
   cd /
   git clone https://github.com/tensorflow/tensorflow.git
   cd tensorflow
-  git checkout tags/v1.3.0
+  git checkout tags/v1.3.1
   ./configure
 
-  bazel build -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
+  bazel build --local_resources 2048,2.0,1.0 -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 
   pip install /tmp/tensorflow_pkg/tensorflow-*.whl
@@ -114,10 +111,10 @@ From: ubuntu:zesty
 
   git clone https://github.com/tensorflow/tensorflow.git
   cd tensorflow
-  git checkout tags/v1.3.0
+  git checkout tags/v1.3.1
   ./configure 
 
-  bazel build -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
+  bazel build --local_resources 2048,2.0,1.0 -c opt --copt=-mavx --copt=-msse4.1 --copt=-msse4.2 --config=cuda tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 
   pip3 install /tmp/tensorflow_pkg/tensorflow-*.whl
