@@ -5,9 +5,13 @@ OSVersion: 7
 MirrorURL: http://mirror.centos.org/altarch/7/os/ppc64le
 Include: yum
 
+%setup
+cp /lustre/atlas/scratch/atj/stf007/ibm_smpi-10.1.0.4-rh7.ppc64le.rpm ${SINGULARITY_ROOTFS}/ibm_smpi-10.1.0.4-rh7.ppc64le.rpm
+cp /lustre/atlas/scratch/atj/stf007/ibm_smpi_lic_s-10.1.1-ca.rh7.ppc64le.rpm ${SINGULARITY_ROOTFS}/ibm_smpi_lic_s-10.1.1-ca.rh7.ppc64le.rpm
+
 %environment
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.151-1.b12.el7_4.ppc64le/jre/bin
-export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH-}:/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.151-1.b12.el7_4.ppc64le/jre/bin:/opt/ibm/spectrum_mpi/lib
+export PATH=${PATH-}:/usr/local/cuda/bin:/usr/lib64/mpich/bin:/opt/ibm/spectrum_mpi/bin
 export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.151-1.b12.el7_4.ppc64le
 
 %post
@@ -21,7 +25,12 @@ yum -y install python-pip python-devel numpy scipy python-setuptools
 yum -y install python34 python34-devel python34-pip python34-numpy python34-scipy python34-setuptools
 yum -y install glibc-static libstdc++-static
 yum -y install epel-release
+yum -y install numactl
 yum repolist
+
+# Install Spectrum MPI
+export IBM_SPECTRUM_MPI_LICENSE_ACCEPT=yes
+yum -y --nogpgcheck localinstall /ibm_smpi-10.1.0.4-rh7.ppc64le.rpm /ibm_smpi_lic_s-10.1.1-ca.rh7.ppc64le.rpm
 
 pip2 install --upgrade pip
 pip3 install --upgrade pip
@@ -32,7 +41,10 @@ pip3 install setuptools --upgrade
 pip2 install --upgrade wheel
 pip3 install --upgrade wheel
 
-# Install Cuda 8.0
+pip2 install mpi4py
+pip3 install mpi4py
+
+# Install Cuda 9.0
 export PERL5LIB=.
 wget https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
 rpm -i cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
@@ -176,6 +188,9 @@ pip3 install scikit-learn
 
 #apt-get install -y python-matplotlib
 #apt-get install -y python3-matplotlib
+
+pip2 install horovod
+pip3 install horovod
 
 # Make sure bazel is shutdown so it doesn't stop singularity from cleanly exiting
 bazel shutdown
