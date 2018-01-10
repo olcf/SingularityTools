@@ -4,6 +4,7 @@ BootStrap: docker
 From: ibmcom/centos-ppc64le
 
 %setup
+mkdir ${SINGULARITY_ROOTFS}/IBM
 cp /IBM/ibm_smpi-10.1.0.4-rh7.ppc64le.rpm ${SINGULARITY_ROOTFS}/IBM/ibm_smpi-10.1.0.4-rh7.ppc64le.rpm
 cp /IBM/ibm_smpi_lic_s-10.1-rh7.ppc64le.rpm ${SINGULARITY_ROOTFS}/IBM/ibm_smpi_lic_s-10.1-rh7.ppc64le.rpm
 cp /usr/bin/qemu-ppc64le  ${SINGULARITY_ROOTFS}/usr/bin/qemu-ppc64le
