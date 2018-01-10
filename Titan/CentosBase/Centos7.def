@@ -14,7 +14,7 @@ yum repolist
 yum -y install mpich mpich-devel
 
 # Install the toolkit
-wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
+wget -q http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run
 export PERL5LIB=.
 sh cuda_7.5.18_linux.run --silent --toolkit --override
 rm cuda_7.5.18_linux.run
@@ -26,7 +26,7 @@ pip install --upgrade pip
 pip install mpi4py
 
 # Patch container to work on Titan
-wget https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanBootstrap.sh
+wget -q https://raw.githubusercontent.com/olcf/SingularityTools/master/Titan/TitanBootstrap.sh
 sh TitanBootstrap.sh
 rm TitanBootstrap.sh
 

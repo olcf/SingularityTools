@@ -45,13 +45,13 @@ pip3 install mpi4py
 
 # Install Cuda 9.0
 export PERL5LIB=.
-wget https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
+wget -q https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
 rpm -i cuda-repo-rhel7-9-0-local-9.0.176-1.ppc64le-rpm
 yum -y clean all
 yum -y install cuda-toolkit-9-0
 
 # Install cuDNN
-wget http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-9.0-linux-ppc64le-v7.tgz
+wget -q http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-9.0-linux-ppc64le-v7.tgz
 tar xvzf cudnn-9.0-linux-ppc64le-v7.tgz
 cp -P cuda/targets/ppc64le-linux/include/cudnn.h /usr/local/cuda/include
 cp -P cuda/targets/ppc64le-linux/lib/libcudnn* /usr/local/cuda/lib64
