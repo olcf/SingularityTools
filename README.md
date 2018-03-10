@@ -1,5 +1,5 @@
 ```diff
-- # This repo has been replaced by  [container-recipes](https://github.com/olcf/container-recipes)
+# - This repo has been replaced by  [container-recipes](https://github.com/olcf/container-recipes)
 ```
 
 ## SingularityTools
